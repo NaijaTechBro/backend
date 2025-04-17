@@ -6,7 +6,6 @@ const express = require('express');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require('helmet');
 const xss = require('xss-clean');
 const whitelist = require('./config/whitelist')
@@ -67,9 +66,6 @@ app.use(cookieParser());
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
-
-// Sanitize data
-app.use(mongoSanitize());
 
 // Set security headers
 app.use(helmet());
