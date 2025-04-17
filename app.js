@@ -7,7 +7,6 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const helmet = require('helmet');
-const xss = require('xss-clean');
 const whitelist = require('./config/whitelist')
 
 const app = express();
@@ -69,9 +68,6 @@ if (process.env.NODE_ENV === 'development') {
 
 // Set security headers
 app.use(helmet());
-
-// Prevent XSS attacks
-app.use(xss());
 
 // Rate limiting
 const limiter = rateLimit({
