@@ -9,7 +9,7 @@ const cors = require('cors');
 const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require('helmet');
 const xss = require('xss-clean');
-const whitelist = require('./config/whiteList')
+const whitelist = require('./config/whitelist')
 
 const app = express();
 const path = require('path');
