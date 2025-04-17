@@ -6,7 +6,7 @@ const {
   createStartup,
   updateStartup,
   deleteStartup
-} = require('../controllers/startupController');
+} = require('../controllers/StartupController');
 
 const { protect, authorize } = require('../middleware/authMiddleware');
 
