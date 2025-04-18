@@ -40,9 +40,10 @@ app.use(errorMiddleware)
 
 app.use(express.json({ limit: "30mb", extended: true}))
 
-app.use(cookieParser())
 app.use(express.urlencoded({ limit: "30mb", extended: false}))
 app.use(bodyParser.json())
+// Cookie parser
+app.use(cookieParser());
 
 app.use(
     helmet.contentSecurityPolicy({
@@ -55,19 +56,10 @@ app.use(
 app.use(expressSanitizer());
 
 
-// Body parser
-app.use(express.json());
-
-// Cookie parser
-app.use(cookieParser());
-
 // Dev logging middleware
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
-
-// Set security headers
-app.use(helmet());
 
 // Rate limiting
 const limiter = rateLimit({
@@ -78,9 +70,6 @@ app.use(limiter);
 
 // Prevent http param pollution
 app.use(hpp());
-
-// Enable CORS
-app.use(cors());
 
 // Mount routers
 app.use('/api', require('./routes/authRoute'));
