@@ -7,7 +7,7 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const helmet = require('helmet');
-const whitelist = require('./config/whitelist')
+// const whitelist = require('./config/whitelist')
 
 const app = express();
 const path = require('path');
@@ -32,7 +32,7 @@ connectDB()
 app.use(logger)
 
 // Cross Origin Resource Sharing
-app.use(cors(whitelist));
+app.use(cors());
 
 // Error Middleware
 app.use(errorHandler)
