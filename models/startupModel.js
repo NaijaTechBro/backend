@@ -40,7 +40,7 @@ const startupSchema = new mongoose.Schema({
   },
   stage: {
     type: String,
-    enum: ['Idea', 'Pre-seed', 'Seed', 'Series A', 'Series B', 'Series C', 'Growth', 'Established'],
+    enum: ['Idea', 'MVP', 'Pre-seed', 'Seed', 'Series A', 'Series B', 'Series C', 'Growth', 'Established'],
     required: true
   },
   metrics: {
