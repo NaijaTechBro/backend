@@ -13,11 +13,12 @@ const {
 } = require('../controllers/authController');
 
 const { protect } = require('../middleware/authMiddleware');
+const { authLimiter } = require('../middleware/rateLimiter'); // Import the rate limiter middleware
 
 const router = express.Router();
 
-router.post('/auth/register', register);
-router.post('/auth/login', login);
+router.post('/auth/register', authLimiter, register);
+router.post('/auth/login', authLimiter, login);
 router.get('/auth/logout', logout);
 router.get('/me', protect, getMe);
 router.put('/auth/update-details', protect, updateDetails);

@@ -16,9 +16,6 @@ const errorHandler = require('./middleware/errorHandler');
 const errorMiddleware = require("./middleware/errorMiddleware");
 const expressSanitizer = require('express-sanitizer');
 const bodyParser = require('body-parser');
-
-
-const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const connectDB = require('./config/dbConn');
 
@@ -61,12 +58,6 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 mins
-  max: 100
-});
-app.use(limiter);
 
 // Prevent http param pollution
 app.use(hpp());
