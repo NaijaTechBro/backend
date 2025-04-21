@@ -28,4 +28,4 @@ const limiter = rateLimit({
   
 
   
-module.exports = errorHandler = {limiter, authLimiter}; // Export the rate limiter middleware for use in your routes
+module.exports = {limiter, authLimiter}; // Export the rate limiter middleware for use in your routes
