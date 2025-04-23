@@ -7,91 +7,110 @@
   <title>Email Verification</title>
   <style>
     body {
-      background-color: #f4f4f4;
+      background-color: #f7f7f7;
       padding: 20px;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
       margin: 0;
-      color: #333;
+      color: #37352f;
     }
     .container {
       max-width: 600px;
       margin: 0 auto;
       background-color: #ffffff;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      border-radius: 3px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
     .logo {
       text-align: center;
-      padding: 15px;
-      background-color: #0056b3;
-      border-radius: 6px;
-      margin-bottom: 20px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .logo h2 {
-      margin: 0;
-      font-size: 28px;
-      color: #ffffff;
+    .logo-image {
+      height: 30px;
+      margin-right: 8px;
+    }
+    .logo-text {
+      font-size: 20px;
+      font-weight: 600;
+      color: #000000;
     }
     h2 {
-      color: #0056b3;
-      margin-bottom: 20px;
+      color: #000000;
+      margin-bottom: 24px;
+      font-weight: 600;
+      font-size: 20px;
     }
     .highlight {
-      color: #e74c3c;
-      font-weight: bold;
+      color: #000000;
+      font-weight: 600;
     }
     p {
-      font-size: 16px;
+      font-size: 15px;
       line-height: 1.6;
-      margin-bottom: 15px;
+      margin-bottom: 16px;
+      color: #37352f;
     }
     .btn-container {
       text-align: center;
-      margin: 30px 0;
+      margin: 32px 0;
     }
     .btn {
       display: inline-block;
-      font-size: 16px;
-      font-weight: 600;
-      padding: 12px 24px;
-      background-color: #28a745;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 16px;
+      background-color: #000000;
       color: #ffffff !important;
       text-decoration: none;
-      border-radius: 5px;
+      border-radius: 3px;
       border: none;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.2s ease;
     }
     .btn:hover {
-      background-color: #218838;
+      background-color: #333333;
     }
     .footer {
       margin-top: 40px;
       text-align: center;
-      color: #666;
+      color: #6b6b6b;
       font-size: 14px;
     }
     .company-name {
-      color: #0056b3;
-      font-weight: bold;
-      font-size: 16px;
+      color: #000000;
+      font-weight: 500;
     }
     .divider {
       border-top: 1px solid #eaeaea;
-      margin: 20px 0;
+      margin: 24px 0;
+    }
+    .link-text {
+      font-size: 12px;
+      word-break: break-all;
+      color: #6b6b6b;
+      padding: 8px;
+      background-color: #f7f7f7;
+      border-radius: 3px;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="logo">
-      <h2>GetListed Africa</h2>
+      <svg class="logo-image" viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="12" cy="12" r="11" fill="black" />
+        <circle cx="12" cy="12" r="8" fill="white" />
+        <circle cx="12" cy="12" r="4" fill="black" />
+      </svg>
+      <span class="logo-text">GetListed Africa</span>
     </div>
     
     <h2>Hello <span class="highlight">{{name}}</span>,</h2>
     
-    <p>Thank you for registering with GetListed Africa. To complete your registration and activate your account, please verify your email address by clicking the button below:</p>
+    <p>Thank you for registering with GetListed. To complete your registration and activate your account, please verify your email address by clicking the button below:</p>
     
     <p>This verification link will expire in 24 hours for security reasons.</p>
     
@@ -99,7 +118,7 @@
       <a href="{{link}}" class="btn">Verify My Account</a>
     </div>
     
-    <p>If you did not create an account with GetListed Africa, please ignore this email or contact our support team if you have concerns.</p>
+    <p>If you did not create an account with GetListed, please ignore this email or contact our support team if you have concerns.</p>
     
     <div class="divider"></div>
     
@@ -107,7 +126,7 @@
       <p>Regards,</p>
       <p class="company-name">GetListed Africa Team</p>
       <p>If you're having trouble clicking the button, copy and paste the URL below into your web browser:</p>
-      <p style="font-size: 12px; word-break: break-all;">{{link}}</p>
+      <div class="link-text">{{link}}</div>
     </div>
   </div>
 </body>

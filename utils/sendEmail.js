@@ -2,15 +2,24 @@ const nodemailer = require('nodemailer');
 const hbs = require('nodemailer-express-handlebars').default;
 const path = require('path');
 
-const sendEmail = async (
-    subject,
-    send_to,
-    sent_from,
-    reply_to,
-    template,
-    name,
-    link
-) => {
+const sendEmail = async (options) => {
+    // Extract all properties from options objects
+    const {
+        subject,
+        send_to,
+        sent_from,
+        reply_to,
+        template,
+        name,
+        link
+    } = options;
+
+    // Validate template parameter
+    if (!template) {
+        console.error("Email template name is required!");
+        return false;
+    }
+
     const transporter = nodemailer.createTransport({
         host: process.env.GETLISTED_EMAIL_HOST,
         port: process.env.GETLISTED_EMAIL_PORT,
@@ -37,24 +46,29 @@ const sendEmail = async (
 
     transporter.use('compile', hbs(handlebarOptions));
 
-    const options = {
+    const mailOptions = {
         from: sent_from,
         to: send_to,
         replyTo: reply_to,
         subject: subject,
-        template, // e.g., "welcome"
+        template: template, // e.g., "welcome"
         context: {
             name,
             link,
         },
     };
 
-    transporter.sendMail(options, function (err, info) {
-        if (err) {
-            console.log('Email sending failed:', err);
-        } else {
-            console.log('Email sent:', info.response);
-        }
+    // Return a promise for better error handling
+    return new Promise((resolve, reject) => {
+        transporter.sendMail(mailOptions, function (err, info) {
+            if (err) {
+                console.log('Email sending failed:', err);
+                reject(err);
+            } else {
+                console.log('Email sent:', info.response);
+                resolve(info);
+            }
+        });
     });
 };
 
