@@ -1,5 +1,3 @@
-
-// server/controllers/authController.js
 const User = require('../models/userModel');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
@@ -43,13 +41,24 @@ exports.register = async (req, res) => {
     // Create verification URL
     const verificationUrl = `${req.protocol}://${req.get('host')}/api/auth/verify/${verificationToken}`;
     
-    const message = `Please verify your email by clicking on the link: ${verificationUrl}`;
-    
+       //send welcome mail
+	const subject = "Email Verification";
+	const send_to = user.email;
+	const sent_from = `${process.env.GETLISTED_FROM_NAME} <${process.env.GETLISTED_FROM_EMAIL}>`;
+	const reply_to = process.env.GETLISTED_FROM_EMAIL
+	const template = "verification";
+  const name = user.firstName;
+  const link = verificationUrl;
     try {
       await sendEmail({
-        email: user.email,
-        subject: 'Email Verification',
-        message
+        subject,
+        send_to,
+        sent_from,
+        reply_to,
+        template,
+        name,
+        link
+        
       });
       
       return res.status(201).json({
@@ -57,6 +66,8 @@ exports.register = async (req, res) => {
         message: 'User registered. Please verify your email'
       });
     } catch (err) {
+      console.error("Email sending failed:", err);
+      
       user.verificationToken = undefined;
       user.verificationTokenExpire = undefined;
       await user.save();
@@ -67,6 +78,7 @@ exports.register = async (req, res) => {
       });
     }
   } catch (err) {
+    console.error("Registration error:", err);
     return res.status(500).json({
       success: false,
       message: err.message
@@ -95,6 +107,36 @@ exports.verifyEmail = async (req, res) => {
     user.verificationToken = undefined;
     user.verificationTokenExpire = undefined;
     await user.save();
+
+    const loginLink = `${req.protocol}://${req.get('host')}/login`;
+    
+       //send welcome mail
+       const subject = "Welcome to GetListed Africa!";
+       const send_to = user.email;
+       const sent_from = `${process.env.GETLISTED_FROM_NAME} <${process.env.GETLISTED_FROM_EMAIL}>`;
+       const reply_to = process.env.GETLISTED_FROM_EMAIL
+       const template = "welcome";
+       const name = user.firstName;
+       const link = loginLink;
+    // Send welcome email after successful verification
+
+    try {
+      await sendEmail({
+        subject,
+        send_to,
+        sent_from,
+        reply_to,
+        template,
+        name,
+        link,
+      });
+      
+      console.log('Welcome email sent successfully');
+    } catch (err) {
+      console.error("Welcome email sending failed:", err);
+      // We don't want to stop the verification process if welcome email fails
+      // Just log the error and continue
+    }
     
     return res.status(200).json({
       success: true,
@@ -278,13 +320,23 @@ exports.forgotPassword = async (req, res) => {
     // Create reset URL
     const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/reset-password/${resetToken}`;
     
-    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
-    
+    const subject = "Password Reset";
+    const send_to = user.email;
+    const sent_from = `${process.env.GETLISTED_FROM_NAME} <${process.env.GETLISTED_FROM_EMAIL}>`;
+    const reply_to = process.env.GETLISTED_FROM_EMAIL
+    const template = "reset-password";
+    const name = user.firstName;
+    const link = resetUrl;
+  
     try {
       await sendEmail({
-        email: user.email,
-        subject: 'Password Reset Token',
-        message
+        subject,
+        send_to,
+        sent_from,
+        reply_to,
+        template,
+        name,
+        link,
       });
       
       res.status(200).json({
@@ -292,6 +344,8 @@ exports.forgotPassword = async (req, res) => {
         message: 'Email sent'
       });
     } catch (err) {
+      console.error("Password reset email error:", err);
+      
       user.resetPasswordToken = undefined;
       user.resetPasswordExpire = undefined;
       
