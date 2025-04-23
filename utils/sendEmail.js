@@ -1,30 +1,61 @@
-// server/utils/sendEmail.js
 const nodemailer = require('nodemailer');
+const hbs = require('nodemailer-express-handlebars').default;
+const path = require('path');
 
-const sendEmail = async (options) => {
-  // Create reusable transporter
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: false, // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_EMAIL,
-      pass: process.env.SMTP_PASSWORD
-    }
-  });
+const sendEmail = async (
+    subject,
+    send_to,
+    sent_from,
+    reply_to,
+    template,
+    name,
+    link
+) => {
+    const transporter = nodemailer.createTransport({
+        host: process.env.GETLISTED_EMAIL_HOST,
+        port: process.env.GETLISTED_EMAIL_PORT,
+        auth: {
+            user: process.env.GETLISTED_EMAIL_USER,
+            pass: process.env.GETLISTED_EMAIL_PASS,
+        },
+        tls: {
+            rejectUnauthorized: false,
+        },
+    });
 
-  // Define email options
-  const mailOptions = {
-    from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
-    to: options.email,
-    subject: options.subject,
-    text: options.message
-  };
+    const handlebarOptions = {
+        viewEngine: {
+            extname: '.handlebars',
+            partialsDir: path.resolve('./emails'),
+            defaultLayout: false,
+        },
+        viewPath: path.resolve('./emails'),
+        extName: '.handlebars',
+    };
 
-  // Send email
-  const info = await transporter.sendMail(mailOptions);
+    console.log("📧 Using email template:", template);
 
-  console.log('Message sent: %s', info.messageId);
+    transporter.use('compile', hbs(handlebarOptions));
+
+    const options = {
+        from: sent_from,
+        to: send_to,
+        replyTo: reply_to,
+        subject: subject,
+        template, // e.g., "welcome"
+        context: {
+            name,
+            link,
+        },
+    };
+
+    transporter.sendMail(options, function (err, info) {
+        if (err) {
+            console.log('Email sending failed:', err);
+        } else {
+            console.log('Email sent:', info.response);
+        }
+    });
 };
 
 module.exports = sendEmail;
