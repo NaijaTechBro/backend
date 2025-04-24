@@ -10,7 +10,7 @@ cloudinary.config({
 });
 
 /**
- * Upload image to Cloudinary
+ * Upload image to Cloudinarys
  * @param {string} filePath - Path to the file to upload
  * @param {Object} options - Cloudinary upload options
  * @returns {Promise} - Cloudinary upload result
