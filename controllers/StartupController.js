@@ -212,37 +212,53 @@ exports.updateStartup = async (req, res) => {
   }
 };
 
-// Delete startup (founder of startup or admin)
 exports.deleteStartup = async (req, res) => {
   try {
     const startup = await Startup.findById(req.params.id);
-    
+
     if (!startup) {
       return res.status(404).json({
         success: false,
         message: `No startup found with id of ${req.params.id}`
       });
     }
-    
-    // Make sure user is startup owner or admin
+
+    // Check permissions
     if (startup.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({
         success: false,
         message: 'Not authorized to delete this startup'
       });
     }
-    
+
     // Delete logo from Cloudinary if it exists
     if (startup.logo && startup.logo.public_id) {
-      await cloudinaryUtils.deleteImage(startup.logo.public_id);
+      try {
+        await cloudinaryUtils.deleteImage(startup.logo.public_id);
+      } catch (cloudErr) {
+        return res.status(500).json({
+          success: false,
+          message: `Failed to delete logo from Cloudinary: ${cloudErr.message}`
+        });
+      }
     }
-    
-    await startup.remove();
-    
+
+    // Delete startup from DB
+    try {
+      await startup.deleteOne(); // more robust than .remove()
+    } catch (dbErr) {
+      // Optional: log or handle Cloudinary image restoration here (if you can)
+      return res.status(500).json({
+        success: false,
+        message: `Startup deletion failed: ${dbErr.message}`
+      });
+    }
+
     res.status(200).json({
       success: true,
       data: {}
     });
+
   } catch (err) {
     return res.status(500).json({
       success: false,
@@ -250,6 +266,7 @@ exports.deleteStartup = async (req, res) => {
     });
   }
 };
+
 
 // Upload startup gallery images
 exports.uploadGalleryImages = async (req, res) => {

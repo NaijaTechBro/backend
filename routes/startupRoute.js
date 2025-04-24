@@ -25,7 +25,7 @@ router.get('/getstartup/:id', getStartup);
 router.post('/create', protect, authorize('founder', 'admin'), createStartup);
 router.put('/updatestartup/:id', protect, authorize('founder', 'admin'), updateStartup);
 router.delete('/deletestartup/:id', protect, authorize('founder', 'admin'), deleteStartup);
-s
+
 
 // Gallery managemessnt routes
 router.post('/upload/:id/gallery', protect, authorize('founder', 'admin'), uploadGalleryImages);
