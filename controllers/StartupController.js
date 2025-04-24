@@ -1,6 +1,6 @@
-
 // server/controllers/startupController.js
 const Startup = require('../models/startupModel');
+const cloudinaryUtils = require('../utils/cloudinary');
 
 // Create new startup (founder only)
 exports.createStartup = async (req, res) => {
@@ -17,6 +17,22 @@ exports.createStartup = async (req, res) => {
         success: false,
         message: 'You have reached the limit of 5 startups'
       });
+    }
+    
+    // Handle logo upload if file is provided
+    if (req.file) {
+      const uploadOptions = {
+        folder: 'getlisted/startups/logos',
+        width: 500, 
+        height: 500,
+        crop: 'fill',
+        quality: 'auto'
+      };
+      
+      const imageResult = await cloudinaryUtils.uploadImage(req.file.path, uploadOptions);
+      
+      // Add the logo information to the request body
+      req.body.logo = imageResult;
     }
     
     const startup = await Startup.create(req.body);
@@ -158,6 +174,27 @@ exports.updateStartup = async (req, res) => {
       });
     }
     
+    // Handle logo upload if file is provided
+    if (req.file) {
+      // Delete old logo if it exists
+      if (startup.logo && startup.logo.public_id) {
+        await cloudinaryUtils.deleteImage(startup.logo.public_id);
+      }
+      
+      const uploadOptions = {
+        folder: 'getlisted/startups/logos',
+        width: 500,
+        height: 500,
+        crop: 'fill',
+        quality: 'auto'
+      };
+      
+      const imageResult = await cloudinaryUtils.uploadImage(req.file.path, uploadOptions);
+      
+      // Add the logo information to the request body
+      req.body.logo = imageResult;
+    }
+    
     startup = await Startup.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
@@ -195,6 +232,11 @@ exports.deleteStartup = async (req, res) => {
       });
     }
     
+    // Delete logo from Cloudinary if it exists
+    if (startup.logo && startup.logo.public_id) {
+      await cloudinaryUtils.deleteImage(startup.logo.public_id);
+    }
+    
     await startup.remove();
     
     res.status(200).json({
@@ -209,3 +251,160 @@ exports.deleteStartup = async (req, res) => {
   }
 };
 
+// Upload startup gallery images
+exports.uploadGalleryImages = async (req, res) => {
+  try {
+    const startup = await Startup.findById(req.params.id);
+    
+    if (!startup) {
+      return res.status(404).json({
+        success: false,
+        message: `No startup found with id of ${req.params.id}`
+      });
+    }
+    
+    // Make sure user is startup owner or admin
+    if (startup.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to update this startup'
+      });
+    }
+    
+    // Check if files are provided
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please upload at least one image'
+      });
+    }
+    
+    // Check if gallery would exceed limit (e.g., max 10 images)
+    const currentGallerySize = startup.gallery ? startup.gallery.length : 0;
+    if (currentGallerySize + req.files.length > 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Maximum gallery size is 10 images'
+      });
+    }
+    
+    // Upload all files to Cloudinary
+    const uploadOptions = {
+      folder: `getlisted/startups/${startup._id}/gallery`,
+      quality: 'auto'
+    };
+    
+    const uploadPromises = req.files.map(file => cloudinaryUtils.uploadImage(file.path, uploadOptions));
+    const uploadedImages = await Promise.all(uploadPromises);
+    
+    // Add new images to gallery
+    if (!startup.gallery) {
+      startup.gallery = [];
+    }
+    
+    startup.gallery = [...startup.gallery, ...uploadedImages];
+    await startup.save();
+    
+    res.status(200).json({
+      success: true,
+      data: startup
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+// Delete a gallery image
+exports.deleteGalleryImage = async (req, res) => {
+  try {
+    const { id, imageId } = req.params;
+    
+    const startup = await Startup.findById(id);
+    
+    if (!startup) {
+      return res.status(404).json({
+        success: false,
+        message: `No startup found with id of ${id}`
+      });
+    }
+    
+    // Make sure user is startup owner or admin
+    if (startup.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized to update this startup'
+      });
+    }
+    
+    // Find the image in the gallery
+    const image = startup.gallery.find(img => img.public_id === imageId);
+    
+    if (!image) {
+      return res.status(404).json({
+        success: false,
+        message: 'Gallery image not found'
+      });
+    }
+    
+    // Delete from Cloudinary
+    await cloudinaryUtils.deleteImage(image.public_id);
+    
+    // Remove from gallery array
+    startup.gallery = startup.gallery.filter(img => img.public_id !== imageId);
+    await startup.save();
+    
+    res.status(200).json({
+      success: true,
+      data: startup
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+// Get all startups created by the logged-in user
+exports.getStartupsByUser = async (req, res) => {
+  try {
+    // Find startups created by the current user
+    const startups = await Startup.find({ createdBy: req.user.id });
+    
+    res.status(200).json({
+      success: true,
+      count: startups.length,
+      data: startups
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+
+// Get all startups created by a specific user (for admin or public profiles)
+exports.getStartupsByUserId = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Find startups created by the specified user
+    const startups = await Startup.find({ createdBy: userId });
+    
+    res.status(200).json({
+      success: true,
+      count: startups.length,
+      data: startups
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
