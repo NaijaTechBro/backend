@@ -11,7 +11,7 @@ const {
   getStartupsByUser,
   getStartupsByUserId
 } = require('../controllers/startupController');
-
+//y
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
