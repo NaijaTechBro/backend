@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 const startupSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -6,7 +7,8 @@ const startupSchema = new mongoose.Schema({
     trim: true
   },
   logo: {
-    type: String
+    public_id: String,
+    url: String
   },
   tagline: {
     type: String,
@@ -67,7 +69,8 @@ const startupSchema = new mongoose.Schema({
   founders: [{
     name: String,
     role: String,
-    linkedin: String
+    linkedin: String,
+    bio: String
   }],
   fundingRounds: [{
     date: Date,
@@ -93,4 +96,5 @@ const startupSchema = new mongoose.Schema({
     default: Date.now
   }
 });
-module.exports = mongoose.model('Startup', startupSchema); 
+
+module.exports = mongoose.model('Startup', startupSchema);
