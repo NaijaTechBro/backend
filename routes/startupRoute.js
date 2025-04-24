@@ -10,7 +10,7 @@ const {
   deleteGalleryImage,
   getStartupsByUser,
   getStartupsByUserId
-} = require('../controllers/startupController');
+} = require('../controllers/startupsController');
 //y
 const { protect, authorize } = require('../middleware/authMiddleware');
 
