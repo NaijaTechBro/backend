@@ -11,6 +11,8 @@ const {
   getStartupsByUser,
   getStartupsByUserId
 } = require('../controllers/startupsController');
+
+const upload = require('../middleware/uploadMiddleware');
 //y
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -22,8 +24,8 @@ router.get('/getstartup/:id', getStartup);
 
 
 // Protected routes - require authentication
-router.post('/create', protect, authorize('founder', 'admin'), createStartup);
-router.put('/updatestartup/:id', protect, authorize('founder', 'admin'), updateStartup);
+router.post('/create', protect, upload.single('logo'), authorize('founder', 'admin'), createStartup);
+router.put('/updatestartup/:id', protect, upload.single('logo'), authorize('founder', 'admin'), updateStartup);
 router.delete('/deletestartup/:id', protect, authorize('founder', 'admin'), deleteStartup);
 
 
