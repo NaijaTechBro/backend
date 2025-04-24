@@ -67,6 +67,10 @@ app.use('/api', require('./routes/authRoute'));
 app.use('/api/startups', require('./routes/startupRoute'));
 app.use('/api/investors', require('./routes/investorRoute'));
 app.use('/api/admin', require('./routes/adminRoute'));
+app.use('/api/startups/connection', require('./routes/connectionRoute'));
+app.use('/api/startups/views', require('./routes/viewRoute'));
+app.use('/api/waitlist', require('./routes/waitlistRoute'));
+app.use('/api/profile', require('./routes/profileRoute'));
 
 
 
