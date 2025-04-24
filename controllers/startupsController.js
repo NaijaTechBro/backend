@@ -5,6 +5,14 @@ const cloudinaryUtils = require('../utils/cloudinary');
 // Create new startup (founder only)
 exports.createStartup = async (req, res) => {
   try {
+       // Check if user is authenticated
+       if (!req.user || !req.user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User authentication failed or user ID not available'
+        });
+      }
+
     // Add user to req.body
     req.body.createdBy = req.user.id;
     
@@ -42,6 +50,7 @@ exports.createStartup = async (req, res) => {
       data: startup
     });
   } catch (err) {
+    console.error('Startup creation error:', err); // Add detailed logging
     return res.status(500).json({
       success: false,
       message: err.message
