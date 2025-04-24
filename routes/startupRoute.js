@@ -23,11 +23,11 @@ router.get('/getstartup/:id', getStartup);
 
 // Protected routes - require authentication
 router.post('/create', protect, authorize('founder', 'admin'), createStartup);
-vrouter.put('/updatestartup/:id', protect, authorize('founder', 'admin'), updateStartup);
+router.put('/updatestartup/:id', protect, authorize('founder', 'admin'), updateStartup);
 router.delete('/deletestartup/:id', protect, authorize('founder', 'admin'), deleteStartup);
+s
 
-
-// Gallery management routes
+// Gallery managemessnt routes
 router.post('/upload/:id/gallery', protect, authorize('founder', 'admin'), uploadGalleryImages);
 router.delete('/delete/:id/gallery/:imageId', protect, authorize('founder', 'admin'), deleteGalleryImage);
 
