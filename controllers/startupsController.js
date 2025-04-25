@@ -78,7 +78,6 @@ exports.createStartup = async (req, res) => {
     });
   }
 };
-
 // Get all startups (public)
 exports.getStartups = async (req, res) => {
   try {
@@ -87,6 +86,12 @@ exports.getStartups = async (req, res) => {
     
     // Copy req.query
     const reqQuery = { ...req.query };
+
+    // Handle search parameter separately
+    const searchTerm = reqQuery.search;
+    if (searchTerm) {
+      delete reqQuery.search; // Remove it from the standard query
+    }
     
     // Fields to exclude
     const removeFields = ['select', 'sort', 'page', 'limit'];
@@ -100,8 +105,23 @@ exports.getStartups = async (req, res) => {
     // Create operators ($gt, $gte, etc)
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g, match => `$${match}`);
     
-    // Finding resource
-    query = Startup.find(JSON.parse(queryStr));
+    // Create base query
+    let parsedQuery = JSON.parse(queryStr);
+   
+    // Add search functionality
+    if (searchTerm) {
+      // Add case-insensitive search on name and description
+      parsedQuery = {
+        ...parsedQuery,
+        $or: [
+          { name: { $regex: searchTerm, $options: 'i' } },
+          { description: { $regex: searchTerm, $options: 'i' } }
+        ]
+      };
+    }
+    
+    // Finding resource with parsedQuery that includes search
+    query = Startup.find(parsedQuery);
     
     // Select fields
     if (req.query.select) {
@@ -117,12 +137,14 @@ exports.getStartups = async (req, res) => {
       query = query.sort('-createdAt');
     }
     
+    // Count total documents with search applied for pagination
+    const total = await Startup.countDocuments(parsedQuery);
+    
     // Pagination
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
-    const total = await Startup.countDocuments(JSON.parse(queryStr));
     
     query = query.skip(startIndex).limit(limit);
     
@@ -148,7 +170,7 @@ exports.getStartups = async (req, res) => {
     
     res.status(200).json({
       success: true,
-      count: startups.length,
+      count: total,
       pagination,
       data: startups
     });
