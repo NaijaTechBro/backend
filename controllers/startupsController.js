@@ -5,13 +5,13 @@ const cloudinaryUtils = require('../utils/cloudinary');
 // Create new startup (founder only)
 exports.createStartup = async (req, res) => {
   try {
-       // Check if user is authenticated
-       if (!req.user || !req.user.id) {
-        return res.status(401).json({
-          success: false,
-          message: 'User authentication failed or user ID not available'
-        });
-      }
+    // Check if user is authenticated
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: 'User authentication failed or user ID not available'
+      });
+    }
 
     // Add user to req.body
     req.body.createdBy = req.user.id;
@@ -41,6 +41,27 @@ exports.createStartup = async (req, res) => {
       
       // Add the logo information to the request body
       req.body.logo = imageResult;
+    } else if (req.body.logoUrl) {
+      // Handle case where a URL is provided instead of a file
+      req.body.logo = { url: req.body.logoUrl };
+      delete req.body.logoUrl; // Remove the temporary field
+    }
+
+    // Parse JSON strings back to objects
+    if (req.body.founders && typeof req.body.founders === 'string') {
+      req.body.founders = JSON.parse(req.body.founders);
+    }
+    
+    if (req.body.fundingRounds && typeof req.body.fundingRounds === 'string') {
+      req.body.fundingRounds = JSON.parse(req.body.fundingRounds);
+    }
+    
+    if (req.body.metrics && typeof req.body.metrics === 'string') {
+      req.body.metrics = JSON.parse(req.body.metrics);
+    }
+    
+    if (req.body.socialProfiles && typeof req.body.socialProfiles === 'string') {
+      req.body.socialProfiles = JSON.parse(req.body.socialProfiles);
     }
     
     const startup = await Startup.create(req.body);
@@ -166,6 +187,14 @@ exports.getStartup = async (req, res) => {
 // Update startup (founder of startup or admin)
 exports.updateStartup = async (req, res) => {
   try {
+    // Check if user is authenticated
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: 'User authentication failed or user ID not available'
+      });
+    }
+
     let startup = await Startup.findById(req.params.id);
     
     if (!startup) {
@@ -202,6 +231,27 @@ exports.updateStartup = async (req, res) => {
       
       // Add the logo information to the request body
       req.body.logo = imageResult;
+    } else if (req.body.logoUrl) {
+      // Handle case where a URL is provided instead of a file
+      req.body.logo = { url: req.body.logoUrl };
+      delete req.body.logoUrl; // Remove the temporary field
+    }
+    
+    // Parse JSON strings back to objects
+    if (req.body.founders && typeof req.body.founders === 'string') {
+      req.body.founders = JSON.parse(req.body.founders);
+    }
+    
+    if (req.body.fundingRounds && typeof req.body.fundingRounds === 'string') {
+      req.body.fundingRounds = JSON.parse(req.body.fundingRounds);
+    }
+    
+    if (req.body.metrics && typeof req.body.metrics === 'string') {
+      req.body.metrics = JSON.parse(req.body.metrics);
+    }
+    
+    if (req.body.socialProfiles && typeof req.body.socialProfiles === 'string') {
+      req.body.socialProfiles = JSON.parse(req.body.socialProfiles);
     }
     
     startup = await Startup.findByIdAndUpdate(req.params.id, req.body, {
@@ -214,6 +264,7 @@ exports.updateStartup = async (req, res) => {
       data: startup
     });
   } catch (err) {
+    console.error('Startup update error:', err); // Added detailed logging like in createStartup
     return res.status(500).json({
       success: false,
       message: err.message
