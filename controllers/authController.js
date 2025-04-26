@@ -85,7 +85,6 @@ exports.register = async (req, res) => {
   }
 };
 
-
 // Re-send verification email
 exports.resendVerification = async (req, res) => {
   try {
@@ -149,21 +148,21 @@ exports.resendVerification = async (req, res) => {
       
       return res.status(200).json({
         success: true,
-        message: 'Verification email has been resent. Please check your inbox.'
+        message: 'Verification email has been resent'
       });
     } catch (err) {
       console.error("Email sending failed:", err);
       
       return res.status(500).json({
         success: false,
-        message: 'Email could not be sent. Please try again later.'
+        message: 'Email could not be sent'
       });
     }
   } catch (err) {
     console.error("Resend verification error:", err);
     return res.status(500).json({
       success: false,
-      message: 'Something went wrong. Please try again later.'
+      message: err.message
     });
   }
 };
@@ -178,73 +177,59 @@ exports.verifyEmail = async (req, res) => {
       verificationTokenExpire: { $gt: Date.now() }
     });
     
-    // Generate a new JWT token for successful verification
-    let authToken = '';
-    let redirectStatus = 'invalid';
-    
     if (!user) {
-      // Check if token exists but is expired
-      const expiredUser = await User.findOne({
-        verificationToken: token,
-        verificationTokenExpire: { $lt: Date.now() }
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired token'
       });
-      
-      if (expiredUser) {
-        redirectStatus = 'expired';
-      } else {
-        redirectStatus = 'invalid';
-      }
-    } else {
-      // Valid token - complete verification
-      user.isEmailVerified = true;
-      user.verificationToken = undefined;
-      user.verificationTokenExpire = undefined;
-      await user.save();
-      
-      // Generate authentication token
-      authToken = user.getSignedJwtToken();
-      redirectStatus = 'success';
-
-      const loginLink = `${req.protocol}://${process.env.GETLISTED_FRONTEND_HOST}/login`;
-      
-      // Send welcome email after successful verification
-      const subject = "Welcome to GetListed Africa!";
-      const send_to = user.email;
-      const sent_from = `${process.env.GETLISTED_FROM_NAME} <${process.env.GETLISTED_FROM_EMAIL}>`;
-      const reply_to = process.env.GETLISTED_FROM_EMAIL;
-      const template = "welcome";
-      const name = user.firstName;
-      const link = loginLink;
-      
-      try {
-        await sendEmail({
-          subject,
-          send_to,
-          sent_from,
-          reply_to,
-          template,
-          name,
-          link,
-        });
-        
-        console.log('Welcome email sent successfully');
-      } catch (err) {
-        console.error("Welcome email sending failed:", err);
-        // We don't want to stop the verification process if welcome email fails
-      }
     }
     
-    // Redirect to the frontend verification result page with appropriate status
-    const redirectUrl = `${process.env.GETLISTED_FRONTEND_URL}/verify-result?status=${redirectStatus}${authToken ? `&token=${authToken}` : ''}`;
-    return res.redirect(redirectUrl);
+    user.isEmailVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpire = undefined;
+    await user.save();
+
+    const loginLink = `${req.protocol}://${process.env.GETLISTED_FRONTEND_HOST}/login`;
     
+    //send welcome mail
+    const subject = "Welcome to GetListed Africa!";
+    const send_to = user.email;
+    const sent_from = `${process.env.GETLISTED_FROM_NAME} <${process.env.GETLISTED_FROM_EMAIL}>`;
+    const reply_to = process.env.GETLISTED_FROM_EMAIL;
+    const template = "welcome";
+    const name = user.firstName;
+    const link = loginLink;
+    
+    // Send welcome email after successful verification
+    try {
+      await sendEmail({
+        subject,
+        send_to,
+        sent_from,
+        reply_to,
+        template,
+        name,
+        link,
+      });
+      
+      console.log('Welcome email sent successfully');
+    } catch (err) {
+      console.error("Welcome email sending failed:", err);
+      // We don't want to stop the verification process if welcome email fails
+      // Just log the error and continue
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Email verified successfully'
+    });
   } catch (err) {
-    console.error("Email verification error:", err);
-    const redirectUrl = `${process.env.GETLISTED_FRONTEND_URL}/verify-result?status=invalid`;
-    return res.redirect(redirectUrl);
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
   }
 };
-
 
 // Login user
 exports.login = async (req, res) => {
