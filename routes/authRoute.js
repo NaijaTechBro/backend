@@ -27,6 +27,6 @@ router.put('/auth/update-password', protect, updatePassword);
 router.post('/auth/forgot-password', forgotPassword);
 router.put('/auth/reset-password/:resetToken', resetPassword);
 router.get('/auth/verify/:token', verifyEmail);
-router.post('/resend-verification', resendVerification);
+router.post('/auth/resend-verification', resendVerification);
 
 module.exports = router;
