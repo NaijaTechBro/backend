@@ -38,17 +38,17 @@ exports.register = async (req, res) => {
       verificationTokenExpire: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
     });
     
-    // Create verification URL
-    const verificationUrl = `${req.protocol}://${req.get('host')}/api/auth/verify/${verificationToken}`;
+    // Create verification URL using environment variable
+    const verificationUrl = `${req.protocol}://${process.env.GETLISTED_HOST}/api/auth/verify/${verificationToken}`;
     
-       //send welcome mail
-	const subject = "Email Verification";
-	const send_to = user.email;
-	const sent_from = `${process.env.GETLISTED_FROM_NAME} <${process.env.GETLISTED_FROM_EMAIL}>`;
-	const reply_to = process.env.GETLISTED_FROM_EMAIL
-	const template = "verification";
-  const name = user.firstName;
-  const link = verificationUrl;
+    //send welcome mail
+    const subject = "Email Verification";
+    const send_to = user.email;
+    const sent_from = `${process.env.GETLISTED_FROM_NAME} <${process.env.GETLISTED_FROM_EMAIL}>`;
+    const reply_to = process.env.GETLISTED_FROM_EMAIL;
+    const template = "verification";
+    const name = user.firstName;
+    const link = verificationUrl;
     try {
       await sendEmail({
         subject,
@@ -58,7 +58,6 @@ exports.register = async (req, res) => {
         template,
         name,
         link
-        
       });
       
       return res.status(201).json({
@@ -79,6 +78,88 @@ exports.register = async (req, res) => {
     }
   } catch (err) {
     console.error("Registration error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+// Re-send verification email
+exports.resendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide your email address'
+      });
+    }
+    
+    // Find user by email
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'No user found with that email'
+      });
+    }
+    
+    // Check if already verified
+    if (user.isEmailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is already verified'
+      });
+    }
+    
+    // Generate new verification token
+    const verificationToken = crypto.randomBytes(20).toString('hex');
+    
+    // Update user with new token
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    await user.save();
+    
+    // Create verification URL using environment variable
+    const verificationUrl = `${req.protocol}://${process.env.GETLISTED_HOST}/api/auth/verify/${verificationToken}`;
+    
+    // Send verification email
+    const subject = "Email Verification - Resend";
+    const send_to = user.email;
+    const sent_from = `${process.env.GETLISTED_FROM_NAME} <${process.env.GETLISTED_FROM_EMAIL}>`;
+    const reply_to = process.env.GETLISTED_FROM_EMAIL;
+    const template = "verification";
+    const name = user.firstName;
+    const link = verificationUrl;
+    
+    try {
+      await sendEmail({
+        subject,
+        send_to,
+        sent_from,
+        reply_to,
+        template,
+        name,
+        link
+      });
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Verification email has been resent'
+      });
+    } catch (err) {
+      console.error("Email sending failed:", err);
+      
+      return res.status(500).json({
+        success: false,
+        message: 'Email could not be sent'
+      });
+    }
+  } catch (err) {
+    console.error("Resend verification error:", err);
     return res.status(500).json({
       success: false,
       message: err.message
@@ -108,18 +189,18 @@ exports.verifyEmail = async (req, res) => {
     user.verificationTokenExpire = undefined;
     await user.save();
 
-    const loginLink = `${req.protocol}://${req.get('host')}/login`;
+    const loginLink = `${req.protocol}://${process.env.GETLISTED_HOST}/login`;
     
-       //send welcome mail
-       const subject = "Welcome to GetListed Africa!";
-       const send_to = user.email;
-       const sent_from = `${process.env.GETLISTED_FROM_NAME} <${process.env.GETLISTED_FROM_EMAIL}>`;
-       const reply_to = process.env.GETLISTED_FROM_EMAIL
-       const template = "welcome";
-       const name = user.firstName;
-       const link = loginLink;
+    //send welcome mail
+    const subject = "Welcome to GetListed Africa!";
+    const send_to = user.email;
+    const sent_from = `${process.env.GETLISTED_FROM_NAME} <${process.env.GETLISTED_FROM_EMAIL}>`;
+    const reply_to = process.env.GETLISTED_FROM_EMAIL;
+    const template = "welcome";
+    const name = user.firstName;
+    const link = loginLink;
+    
     // Send welcome email after successful verification
-
     try {
       await sendEmail({
         subject,
@@ -317,13 +398,13 @@ exports.forgotPassword = async (req, res) => {
     
     await user.save();
     
-    // Create reset URL
-    const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/reset-password/${resetToken}`;
+    // Create reset URL using environment variable
+    const resetUrl = `${req.protocol}://${process.env.GETLISTED_HOST}/api/auth/reset-password/${resetToken}`;
     
     const subject = "Password Reset";
     const send_to = user.email;
     const sent_from = `${process.env.GETLISTED_FROM_NAME} <${process.env.GETLISTED_FROM_EMAIL}>`;
-    const reply_to = process.env.GETLISTED_FROM_EMAIL
+    const reply_to = process.env.GETLISTED_FROM_EMAIL;
     const template = "reset-password";
     const name = user.firstName;
     const link = resetUrl;
