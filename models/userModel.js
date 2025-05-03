@@ -27,7 +27,6 @@ const userSchema = new mongoose.Schema({
     minlength: 8,
     select: false
   },
-
   role: {
     type: String,
     enum: ['user', 'founder', 'investor', 'startup', 'admin'],
@@ -46,6 +45,46 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // New fields for role-based verification
+  isRoleVerified: {
+    type: Boolean,
+    default: false
+  },
+  roleVerificationStatus: {
+    type: String,
+    enum: ['not_submitted', 'pending', 'approved', 'rejected'],
+    default: 'not_submitted'
+  },
+  roleVerificationDocuments: {
+    idDocument: {
+      type: String, // URL to stored document
+      default: null
+    },
+    businessRegistration: {
+      type: String, // URL to stored document
+      default: null
+    },
+    proofOfAddress: {
+      type: String, // URL to stored document
+      default: null
+    },
+    additionalDocuments: [{
+      type: String // URLs to stored documents
+    }]
+  },
+  roleVerificationSubmittedAt: {
+    type: Date
+  },
+  roleVerificationApprovedAt: {
+    type: Date
+  },
+  roleVerificationRejectedAt: {
+    type: Date
+  },
+  roleVerificationRejectionReason: {
+    type: String
+  },
+  // End of new fields
   createdAt: {
     type: Date,
     default: Date.now
@@ -84,6 +123,12 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
+// Update the updatedAt field on save
+userSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
 // Method to compare entered password with hashed password
 userSchema.methods.matchPassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
@@ -92,10 +137,19 @@ userSchema.methods.matchPassword = async function(enteredPassword) {
 // Method to generate JWT token
 userSchema.methods.getSignedJwtToken = function() {
   return jwt.sign(
-    { id: this._id, role: this.role },
+    { 
+      id: this._id, 
+      role: this.role,
+      isRoleVerified: this.isRoleVerified 
+    },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRE }
   );
+};
+
+// Method to check if user needs role verification
+userSchema.methods.requiresRoleVerification = function() {
+  return (this.role === 'founder' || this.role === 'investor') && !this.isRoleVerified;
 };
 
 module.exports = mongoose.model('User', userSchema);

@@ -29,7 +29,12 @@ connectDB()
 app.use(logger)
 
 // Cross Origin Resource Sharing
-app.use(cors());
+app.use(cors({
+    origin: process.env.GETLISTED_FRONTEND_URL,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // Error Middleware
 app.use(errorHandler)
@@ -64,6 +69,7 @@ app.use(hpp());
 
 // Mount routers
 app.use('/api', require('./routes/authRoute'));
+app.use('/api/verification', require('./routes/roleVerifyRoute'));
 app.use('/api/startups', require('./routes/startupRoute'));
 app.use('/api/investors', require('./routes/investorRoute'));
 app.use('/api/admin', require('./routes/adminRoute'));
