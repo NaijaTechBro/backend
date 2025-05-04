@@ -11,7 +11,7 @@ exports.sendVerificationRequestNotification = async (verification, user) => {
     const subject = `New Verification Request - ${user.firstName} ${user.lastName}`;
     
     // Admin email should be configured in environment variables
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+    const adminEmail = process.env.GETLISTED_ADMIN_EMAIL || 'admin@getlisted.site';
     
     // Generate admin dashboard link
     const adminDashboardLink = `${process.env.FRONTEND_URL}/admin/verification/${verification._id}`;
