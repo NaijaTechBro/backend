@@ -1,6 +1,6 @@
 // server/controllers/waitlistController.js
 const Waitlist = require('../models/waitlistModel');
-const sendEmail = require('../utils/sendEmail');
+const sendEmail = require('../utils/email/sendEmail');
 
 // Join waitlist
 exports.joinWaitlist = async (req, res) => {

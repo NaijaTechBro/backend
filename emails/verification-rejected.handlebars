@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification Request Rejected</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #0066cc;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Verification Request Rejected</h1>
+    </div>
+    <div class="content">
+        <p>Hello {{name}},</p>
+        
+        <p>We regret to inform you that your verification request has been rejected.</p>
+        
+        <p>This could be due to one of the following reasons:</p>
+        <ul>
+            <li>The documents provided were unclear or illegible</li>
+            <li>The information on the documents did not match your account details</li>
+            <li>The documents provided were expired or invalid</li>
+            <li>Required documents were missing</li>
+        </ul>
+        
+        <p>You may resubmit your verification request with the necessary corrections.</p>
+        
+        <a href="{{link}}" class="button">Go to Dashboard</a>
+        
+        <p>If you have any questions or need assistance, please contact our support team.</p>
+        
+        <p>Best regards,<br>The Team</p>
+    </div>
+    <div class="footer">
+        <p>This is an automated email, please do not reply directly to this message.</p>
+    </div>
+</body>
+</html>

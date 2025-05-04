@@ -106,3 +106,16 @@ exports.deleteMultipleImages = async (publicIds) => {
     throw new Error(`Error deleting multiple images: ${error.message}`);
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
