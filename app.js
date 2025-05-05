@@ -83,9 +83,9 @@ app.use('/api/waitlist', require('./routes/waitlistRoute'));
 app.use('/api/profile', require('./routes/profileRoute'));
 // PitchDeck router
 app.use('/api/decks', require('./routes/pitch-deck/deckRoute'));
-app.use('/api/templates', require('./routes/pitch-deck/templateRoute'));
-app.use('/api/examples', require('./routes/pitch-deck/exampleRoute'));
 app.use('/api/ai', require('./routes/pitch-deck/aiRoute'));
 app.use('/api/export', require('./routes/pitch-deck/exportRoute'));
+app.use('/api/templates', require('./routes/pitch-deck/templateRoute'));
+app.use('/api/examples', require('./routes/pitch-deck/exampleRoute'));
 
 module.exports = app;

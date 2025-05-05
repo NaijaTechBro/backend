@@ -1,12 +1,10 @@
-// server/controllers/aiController.js
-const { Configuration, OpenAIApi } = require('openai');
+const { Configuration, OpenAI } = require('openai');
 const Example = require('../../models/pitch-deck/exampleModel');
 const Template = require('../../models/pitch-deck/templateModel');
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 // Get AI suggestions for a slide
 const getSuggestions = async (req, res) => {

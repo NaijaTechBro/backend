@@ -1,7 +1,7 @@
-// server/routes/aiRoutes.js
+// server/routes/pitch-deck/aiRoutes.js
 const express = require('express');
 const { getSuggestions, generateDeck } = require('../../controllers/pitch-deck/aiController');
-const protect = require('../../middleware/authMiddleware');
+const {protect }= require('../../middleware/authMiddleware');
 
 const router = express.Router();
 

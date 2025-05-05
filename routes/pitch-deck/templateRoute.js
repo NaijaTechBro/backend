@@ -5,7 +5,7 @@ const {
   getTemplate, 
   createTemplate 
 } = require('../../controllers/pitch-deck/templateController');
-const protect = require('../../middleware/authMiddleware');
+const { protect } = require('../../middleware/authMiddleware');
 
 const router = express.Router();
 

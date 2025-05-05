@@ -1,11 +1,11 @@
 
 // server/utils/presentationExporter.js
-import pptxgen from 'pptxgenjs';
-import fs from 'fs';
-import path from 'path';
-import puppeteer from 'puppeteer';
-import { convert } from 'html-to-text';
-import { JSDOM } from 'jsdom';
+const pptxgen = require('pptxgenjs');
+const fs = require('fs')
+const path = require('path')
+const puppeteer = require('puppeteer');
+const { convert } = require('html-to-text');
+const { JSDOM } = require('jsdom');
 
 class PresentationExporter {
   // Export to PowerPoint
@@ -178,4 +178,4 @@ class PresentationExporter {
   }
 }
 
-export default PresentationExporter;
+module.exports = PresentationExporter;

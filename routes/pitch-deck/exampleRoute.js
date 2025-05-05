@@ -1,7 +1,7 @@
 // server/routes/exampleRoutes.js
 const express = require('express');
 const { getExamples, createExample } = require('../../controllers/pitch-deck/exampleController');
-const protect = require('../../middleware/authMiddleware');
+const { protect } = require('../../middleware/authMiddleware');
 
 const router = express.Router();
 

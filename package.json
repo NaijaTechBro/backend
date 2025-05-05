@@ -29,6 +29,8 @@
     "express-validator": "^7.2.1",
     "helmet": "^8.1.0",
     "hpp": "^0.2.3",
+    "html-to-text": "^9.0.5",
+    "jsdom": "^26.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.13.2",
     "morgan": "^1.10.0",
@@ -36,6 +38,8 @@
     "nodemailer": "^6.10.1",
     "nodemailer-express-handlebars": "^7.0.0",
     "openai": "^4.97.0",
+    "pptxgenjs": "^4.0.0",
+    "puppeteer": "^24.8.0",
     "uuid": "^11.1.0",
     "xss-clean": "^0.1.4"
   },
