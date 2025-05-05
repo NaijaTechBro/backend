@@ -18,6 +18,7 @@ const bodyParser = require('body-parser');
 const hpp = require('hpp');
 const connectDB = require('./config/dbConn');
 
+
 // Connecting to Database Environments
 console.log(process.env.NODE_ENV)
 connectDB()
@@ -80,5 +81,11 @@ app.use('/api/startups/connection', require('./routes/connectionRoute'));
 app.use('/api/startups/views', require('./routes/viewRoute'));
 app.use('/api/waitlist', require('./routes/waitlistRoute'));
 app.use('/api/profile', require('./routes/profileRoute'));
+// PitchDeck router
+app.use('/api/decks', require('./routes/pitch-deck/deckRoute'));
+app.use('/api/templates', require('./routes/pitch-deck/templateRoute'));
+app.use('/api/examples', require('./routes/pitch-deck/exampleRoute'));
+app.use('/api/ai', require('./routes/pitch-deck/aiRoute'));
+app.use('/api/export', require('./routes/pitch-deck/exportRoute'));
 
 module.exports = app;
