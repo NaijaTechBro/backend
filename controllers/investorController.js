@@ -1,9 +1,9 @@
 // controllers/investorController.js
-const Investor = require('../models/investorModel');
+const Investor = require('../models/investor/investorModel');
 const User = require('../models/userModel');
 const ErrorResponse = require('../middleware/errorResponseMiddleware');
 const asyncHandler = require('express-async-handler');
-const Startup = require('../models/startupModel');
+const Startup = require('../models/startup/startupModel');
 
 
 
