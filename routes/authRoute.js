@@ -11,7 +11,7 @@ const {
   updatePassword,
   verifyEmail,
   resendVerification,
-} = require('../controllers/authController');
+} = require('../controllers/auth/authController');
 
 const { protect } = require('../middleware/authMiddleware');
 const { authLimiter } = require('../middleware/rateLimiter'); // Import the rate limiter middleware

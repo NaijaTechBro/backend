@@ -4,7 +4,7 @@ const {
   recordView,
   getStartupViewStats,
   getAllStartupsViewStats
-} = require('../controllers/viewController');
+} = require('../controllers/startup/viewController');
 
 const { protect, authorize } = require('../middleware/authMiddleware');
 

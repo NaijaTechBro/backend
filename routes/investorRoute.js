@@ -1,6 +1,6 @@
 // server/routes/investors.js
 const express = require('express');
-const Investor = require('../models/investorModel');
+const Investor = require('../models/investor/investorModel');
 
 const {
   getFounders,

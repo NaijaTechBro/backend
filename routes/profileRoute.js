@@ -6,7 +6,7 @@ const {
   uploadProfilePicture,
   deleteProfilePicture,
   getPublicProfile
-} = require('../controllers/profileController');
+} = require('../controllers/startup/profileController');
 
 const { protect } = require('../middleware/authMiddleware');
 

@@ -6,7 +6,7 @@ const {
   getAllVerifications,
   getVerificationById,
   deleteVerification
-} = require('../controllers/verificationController');
+} = require('../controllers/startup/verificationController');
 
 const router = express.Router();
 

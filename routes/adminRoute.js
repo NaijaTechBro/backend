@@ -7,7 +7,7 @@ const {
   deleteUser,
   verifyStartup,
   getStatistics
-} = require('../controllers/adminController');
+} = require('../controllers/admin/adminController');
 
 const { protect, authorize } = require('../middleware/authMiddleware');
 const router = express.Router();

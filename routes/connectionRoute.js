@@ -7,7 +7,7 @@ const {
   getConnectionsForStartup,
   updateConnectionStatus,
   deleteConnection
-} = require('../controllers/connectionController');
+} = require('../controllers/startup/connectionController');
 
 const { protect } = require('../middleware/authMiddleware');
 
