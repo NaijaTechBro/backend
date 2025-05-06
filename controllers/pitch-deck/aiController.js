@@ -1,4 +1,4 @@
-const { Configuration, OpenAI } = require('openai');
+const { OpenAI } = require('openai');
 const Example = require('../../models/pitch-deck/exampleModel');
 const Template = require('../../models/pitch-deck/templateModel');
 

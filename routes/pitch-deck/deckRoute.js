@@ -12,18 +12,18 @@ const { protect } = require('../../middleware/authMiddleware');
 const router = express.Router();
 
 // Get all decks for a user
-router.get('/', protect, getDecks);
+router.get('/getall', protect, getDecks);
 
 // Get a single deck
-router.get('/:id', protect, getDeck);
+router.get('/getOne/:id', protect, getDeck);
 
 // Create a new deck
-router.post('/', protect, createDeck);
+router.post('/create', protect, createDeck);
 
 // Update a deck
-router.put('/:id', protect, updateDeck);
+router.put('/update/:id', protect, updateDeck);
 
 // Delete a deck
-router.delete('/:id', protect, deleteDeck);
+router.delete('/delete/:id', protect, deleteDeck);
 
 module.exports = router;
