@@ -211,7 +211,7 @@ exports.deleteProfilePicture = async (req, res) => {
 exports.getPublicProfile = async (req, res) => {
   try {
     const profile = await Profile.findOne({ user: req.params.userId }).select(
-      'firstName lastName bio profilePicture socialLinks jobTitle company location skills'
+      'firstName lastName bio email phone homeAddress city state postalCode country profilePicture socialLinks jobTitle company location skills preferences notifications'
     );
     
     if (!profile) {
