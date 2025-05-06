@@ -13,7 +13,7 @@ const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // Protected routes - require authentication
-router.get('/me', protect, getProfile);
+router.get('/getprofile', protect, getProfile);
 router.put('/update', protect, updateProfile);
 router.post('/upload-picture', protect, uploadProfilePicture);
 router.delete('/delete-picture', protect, deleteProfilePicture);
