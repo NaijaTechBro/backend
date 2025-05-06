@@ -26,25 +26,68 @@ exports.getProfile = async (req, res) => {
   }
 };
 
+
+
+
+
+
 // Update user profile
 exports.updateProfile = async (req, res) => {
   try {
     // Fields that can be updated
     const fieldsToUpdate = {
+      // Basic info
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       bio: req.body.bio,
-      socialLinks: req.body.socialLinks,
+      email: req.body.email,
+      phone: req.body.phone,
+      
+      // Address fields
+      homeAddress: req.body.homeAddress,
+      city: req.body.city,
+      state: req.body.state,
+      postalCode: req.body.postalCode,
+      country: req.body.country,
+      
+      // Professional info
       jobTitle: req.body.jobTitle,
       company: req.body.company,
       location: req.body.location,
-      skills: req.body.skills
+      skills: req.body.skills,
+      
+      // Social links
+      socialLinks: req.body.socialLinks,
+      
+      // Preferences (if provided)
+      preferences: req.body.preferences ? {
+        notifications: req.body.preferences.notifications ? {
+          paymentNotifications: req.body.preferences.notifications.paymentNotifications,
+          invoiceReminders: req.body.preferences.notifications.invoiceReminders,
+          productUpdates: req.body.preferences.notifications.productUpdates
+        } : undefined,
+        display: req.body.preferences.display ? {
+          currencyFormat: req.body.preferences.display.currencyFormat,
+          dateFormat: req.body.preferences.display.dateFormat
+        } : undefined,
+        integrations: req.body.preferences.integrations ? {
+          stripe: req.body.preferences.integrations.stripe,
+          quickbooks: req.body.preferences.integrations.quickbooks
+        } : undefined
+      } : undefined
     };
     
     // Remove undefined fields
-    Object.keys(fieldsToUpdate).forEach(key => 
-      fieldsToUpdate[key] === undefined && delete fieldsToUpdate[key]
-    );
+    Object.keys(fieldsToUpdate).forEach(key => {
+      if (fieldsToUpdate[key] === undefined) {
+        delete fieldsToUpdate[key];
+      } else if (typeof fieldsToUpdate[key] === 'object' && fieldsToUpdate[key] !== null) {
+        // For nested objects like preferences, remove empty objects
+        if (Object.keys(fieldsToUpdate[key]).length === 0) {
+          delete fieldsToUpdate[key];
+        }
+      }
+    });
     
     let profile = await Profile.findOne({ user: req.user.id });
     

@@ -57,6 +57,8 @@ exports.syncUserProfile = async (req, res, next) => {
       if (user.firstName !== profile.firstName || user.lastName !== profile.lastName) {
         profile.firstName = user.firstName;
         profile.lastName = user.lastName;
+        profile.phone = user.phone;
+        
         await profile.save();
       }
     }
