@@ -1,22 +1,22 @@
 // server/controllers/profileController.js
-const User = require('../../models/userModel');
+const Profile = require('../../models/profileModel');
 const cloudinaryUtils = require('../../utils/cloudinary');
 
 // Get user profile
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const profile = await Profile.findOne({ user: req.user.id });
     
-    if (!user) {
+    if (!profile) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'Profile not found'
       });
     }
     
     res.status(200).json({
       success: true,
-      data: user
+      data: profile
     });
   } catch (err) {
     return res.status(500).json({
@@ -46,21 +46,27 @@ exports.updateProfile = async (req, res) => {
       fieldsToUpdate[key] === undefined && delete fieldsToUpdate[key]
     );
     
-    const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
-      new: true,
-      runValidators: true
-    });
+    let profile = await Profile.findOne({ user: req.user.id });
     
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+    if (!profile) {
+      // If profile doesn't exist yet, create one
+      fieldsToUpdate.user = req.user.id;
+      profile = await Profile.create(fieldsToUpdate);
+    } else {
+      // Update existing profile
+      profile = await Profile.findOneAndUpdate(
+        { user: req.user.id },
+        fieldsToUpdate,
+        {
+          new: true,
+          runValidators: true
+        }
+      );
     }
     
     res.status(200).json({
       success: true,
-      data: user
+      data: profile
     });
   } catch (err) {
     return res.status(500).json({
@@ -81,19 +87,21 @@ exports.uploadProfilePicture = async (req, res) => {
       });
     }
     
-    // Get current user
-    const user = await User.findById(req.user.id);
+    // Get current profile
+    let profile = await Profile.findOne({ user: req.user.id });
     
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
+    if (!profile) {
+      // Create profile if it doesn't exist
+      profile = await Profile.create({ 
+        user: req.user.id,
+        firstName: '',  // Add mandatory fields with placeholders
+        lastName: ''    // These should be updated later
       });
     }
     
-    // If user already has a profile picture, delete it from Cloudinary
-    if (user.profilePicture && user.profilePicture.public_id) {
-      await cloudinaryUtils.deleteImage(user.profilePicture.public_id);
+    // If profile already has a profile picture, delete it from Cloudinary
+    if (profile.profilePicture && profile.profilePicture.public_id) {
+      await cloudinaryUtils.deleteImage(profile.profilePicture.public_id);
     }
     
     // Upload to Cloudinary using the utility function
@@ -107,13 +115,13 @@ exports.uploadProfilePicture = async (req, res) => {
     
     const imageResult = await cloudinaryUtils.uploadImage(req.file.path, uploadOptions);
     
-    // Update user profile picture
-    user.profilePicture = imageResult;
-    await user.save();
+    // Update profile picture
+    profile.profilePicture = imageResult;
+    await profile.save();
     
     res.status(200).json({
       success: true,
-      data: user
+      data: profile
     });
   } catch (err) {
     return res.status(500).json({
@@ -126,27 +134,27 @@ exports.uploadProfilePicture = async (req, res) => {
 // Delete profile picture
 exports.deleteProfilePicture = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const profile = await Profile.findOne({ user: req.user.id });
     
-    if (!user) {
+    if (!profile) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'Profile not found'
       });
     }
     
-    // If user has a profile picture, delete it from Cloudinary
-    if (user.profilePicture && user.profilePicture.public_id) {
-      await cloudinaryUtils.deleteImage(user.profilePicture.public_id);
+    // If profile has a profile picture, delete it from Cloudinary
+    if (profile.profilePicture && profile.profilePicture.public_id) {
+      await cloudinaryUtils.deleteImage(profile.profilePicture.public_id);
     }
     
     // Set profile picture to null
-    user.profilePicture = null;
-    await user.save();
+    profile.profilePicture = null;
+    await profile.save();
     
     res.status(200).json({
       success: true,
-      data: user
+      data: profile
     });
   } catch (err) {
     return res.status(500).json({
@@ -159,20 +167,20 @@ exports.deleteProfilePicture = async (req, res) => {
 // Get public profile by user ID
 exports.getPublicProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId).select(
+    const profile = await Profile.findOne({ user: req.params.userId }).select(
       'firstName lastName bio profilePicture socialLinks jobTitle company location skills'
     );
     
-    if (!user) {
+    if (!profile) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'Profile not found'
       });
     }
     
     res.status(200).json({
       success: true,
-      data: user
+      data: profile
     });
   } catch (err) {
     return res.status(500).json({
