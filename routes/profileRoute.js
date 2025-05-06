@@ -9,14 +9,15 @@ const {
 } = require('../controllers/startup/profileController');
 
 const { protect } = require('../middleware/authMiddleware');
+const { ensureProfile } = require('../middleware/profileMiddleware');
 
 const router = express.Router();
 
-// Protected routes - require authentication
-router.get('/me', protect, getProfile);
-router.put('/update', protect, updateProfile);
-router.post('/upload-picture', protect, uploadProfilePicture);
-router.delete('/delete-picture', protect, deleteProfilePicture);
+// Protected routes - require authentication and ensure profile exists
+router.get('/me', protect, ensureProfile, getProfile);
+router.put('/update', protect, ensureProfile, updateProfile);
+router.post('/upload-picture', protect, ensureProfile, uploadProfilePicture);
+router.delete('/delete-picture', protect, ensureProfile, deleteProfilePicture);
 
 // Public route
 router.get('/user/:userId', getPublicProfile);
