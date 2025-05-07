@@ -11,7 +11,7 @@ exports.ensureInvestor = async (req, res, next) => {
     // Try to find the user's profile
     let investor = await Investor.findOne({ userId: req.user.id });
     
-    // If profile doesn't exist, create it with data from user model
+    // If profile doesn't exist, create it with data from user models
     if (!investor) {
       // Get full user data
       const user = await User.findById(req.user.id);
