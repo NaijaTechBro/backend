@@ -1,6 +1,6 @@
 // server/routes/investors.js
 const express = require('express');
-const Investor = require('../models/investor/investorModel');
+const router = express.Router();
 
 const {
   getFounders,
@@ -20,37 +20,32 @@ const {
 
 const { protect, authorize } = require('../middleware/authMiddleware');
 const advancedResults = require('../middleware/advancedResults');
+const { ensureInvestor, syncInvestorProfile } = require('../middleware/investorMiddleware');
 
-const router = express.Router();
+// Base routes that don't need profile check
+router.get('/founders', protect, getFounders);
+router.get('/getInvestors', protect, getInvestors);
 
-router.get('/founders', protect, authorize('admin'), getFounders);
-router.get('/investors', protect, authorize('admin'), getInvestors);
+// Current investor profile routes
+router.route('/me')
+  .get(protect, ensureInvestor, getMyInvestorProfile);
+
+// Investment operations
 router.post('/invest', protect, authorize('investor'), investInStartup);
 router.get('/portfolio', protect, authorize('investor'), getInvestorPortfolio);
 
+// Investor profile creation/management
+router.post('/create', protect, createInvestor);
 
-// Routes that apply to all users
-router.route('/')
-  .get(
-    advancedResults(Investor, {
-      path: 'userId',
-      select: 'firstName lastName email profilePicture'
-    }),
-    getInvestors
-  )
-  .post(protect, createInvestor);
+// Individual investor operations
+router.get('/:id', protect, getInvestor);
+router.put('/:id', protect, syncInvestorProfile, updateInvestor);
+router.delete('/:id', protect, authorize('admin', 'investor'), deleteInvestor);
 
-router.route('/search')
-  .post(searchInvestors);
+// Search functionality
+router.post('/search', searchInvestors);
 
-router.route('/me')
-  .get(protect, getMyInvestorProfile);
-
-router.route('/:id')
-  .get(getInvestor)
-  .put(protect, updateInvestor)
-  .delete(protect, authorize('admin', 'investor'), deleteInvestor);
-
+// Portfolio management
 router.route('/:id/portfolio')
   .put(protect, addPortfolioCompany);
 

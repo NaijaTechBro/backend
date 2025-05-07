@@ -5,9 +5,7 @@ const ErrorResponse = require('../middleware/errorResponseMiddleware');
 const asyncHandler = require('express-async-handler');
 const Startup = require('../models/startup/startupModel');
 
-
-
-// Get all founders (admin only)
+// Get all founders
 exports.getFounders = async (req, res) => {
   try {
     const founders = await User.find({ role: 'founder' });
@@ -25,91 +23,103 @@ exports.getFounders = async (req, res) => {
   }
 };
 
+// Get all Investors 
+exports.getInvestors = async (req, res) => {
+  try {
+    const investors = await User.find({ role: 'investor' });
+    
+    res.status(200).json({
+      success: true,
+      count: investors.length,
+      data: investors
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
 
 // Invest in a startup (investor only)
-exports.investInStartup = async (req, res) => {
-  try {
-    const { startupId, amount } = req.body;
-    
-    if (!startupId || !amount) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide startup ID and investment amount'
-      });
-    }
-    
-    const startup = await Startup.findById(startupId);
-    
-    if (!startup) {
-      return res.status(404).json({
-        success: false,
-        message: 'Startup not found'
-      });
-    }
-    
-    // Add new funding round
-    const newFundingRound = {
-      date: Date.now(),
-      amount: amount,
-      investors: [req.user.id],
-      stage: startup.stage
-    };
-    
-    startup.fundingRounds.push(newFundingRound);
-    
-    // Update total funding
-    startup.metrics.fundingTotal += amount;
-    
-    await startup.save();
-    
-    // Add startup to investor's portfolio
-    const investor = await User.findById(req.user.id);
-    
-    if (!investor.investorProfile.portfolioCompanies.includes(startupId)) {
-      investor.investorProfile.portfolioCompanies.push(startupId);
-      await investor.save();
-    }
-    
-    res.status(200).json({
-      success: true,
-      data: startup
-    });
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: err.message
-    });
+exports.investInStartup = asyncHandler(async (req, res, next) => {
+  const { startupId, amount } = req.body;
+  
+  if (!startupId || !amount) {
+    return next(new ErrorResponse('Please provide startup ID and investment amount', 400));
   }
-};
+  
+  const startup = await Startup.findById(startupId);
+  
+  if (!startup) {
+    return next(new ErrorResponse('Startup not found', 404));
+  }
+  
+  // Add new funding round
+  const newFundingRound = {
+    date: Date.now(),
+    amount: amount,
+    investors: [req.user.id],
+    stage: startup.stage
+  };
+  
+  startup.fundingRounds.push(newFundingRound);
+  
+  // Update total funding
+  startup.metrics.fundingTotal += Number(amount);
+  
+  await startup.save();
+  
+  // Add startup to investor's portfolio
+  const investor = await Investor.findOne({ userId: req.user.id });
+  
+  if (!investor) {
+    return next(new ErrorResponse('Investor profile not found', 404));
+  }
+  
+  // Check if startup already in portfolio
+  const existingPortfolioItem = investor.portfolio.find(
+    item => item.startupId && item.startupId.toString() === startupId
+  );
+  
+  if (!existingPortfolioItem) {
+    investor.portfolio.push({
+      startupId: startupId,
+      startupName: startup.name,
+      investmentDate: Date.now(),
+      investmentStage: startup.stage,
+      description: `Investment of $${amount}`
+    });
+    await investor.save();
+  }
+  
+  res.status(200).json({
+    success: true,
+    data: startup
+  });
+});
 
 // Get investor portfolio (investor only)
-exports.getInvestorPortfolio = async (req, res) => {
-  try {
-    const investor = await User.findById(req.user.id).populate('investorProfile.portfolioCompanies');
-    
-    res.status(200).json({
-      success: true,
-      data: investor.investorProfile.portfolioCompanies
+exports.getInvestorPortfolio = asyncHandler(async (req, res, next) => {
+  const investor = await Investor.findOne({ userId: req.user.id })
+    .populate({
+      path: 'portfolio.startupId',
+      model: 'Startup',
+      select: 'name description logo metrics'
     });
-  } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: err.message
-    });
+  
+  if (!investor) {
+    return next(new ErrorResponse('Investor profile not found', 404));
   }
-};
-
-
-
-
-
-
-
-
-
+  
+  res.status(200).json({
+    success: true,
+    data: investor.portfolio
+  });
+});
 
 // @desc    Create investor profile
-// @route   POST /api/v1/investors
+// @route   POST /api/v1/investors/create
 // @access  Private
 exports.createInvestor = asyncHandler(async (req, res, next) => {
   // Add user ID to request body
@@ -122,11 +132,52 @@ exports.createInvestor = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('User already has an investor profile', 400));
   }
 
+  // Get the user data
+  const user = await User.findById(req.user.id);
+  
+  // Set required fields if not provided
+  if (!req.body.name) {
+    req.body.name = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+  }
+  
+  if (!req.body.contactDetails) {
+    req.body.contactDetails = {
+      email: user.email,
+      phone: user.phone || '',
+      website: ''
+    };
+  }
+  
+  // Ensure required fields are set
+  if (!req.body.preferredStages) {
+    req.body.preferredStages = ['All Stages'];
+  }
+  
+  if (!req.body.preferredSectors) {
+    req.body.preferredSectors = ['Technology'];
+  }
+  
+  if (!req.body.preferredCountries) {
+    req.body.preferredCountries = ['Global'];
+  }
+  
+  if (!req.body.position) {
+    req.body.position = 'Investor';
+  }
+  
+  if (!req.body.organization) {
+    req.body.organization = 'Independent';
+  }
+  
+  if (!req.body.bio) {
+    req.body.bio = user.bio || 'No bio available';
+  }
+
   // Create investor profile
   const investor = await Investor.create(req.body);
 
   // Update user role to investor if not already
-  if (req.user.role !== 'investor') {
+  if (user.role !== 'investor') {
     await User.findByIdAndUpdate(req.user.id, { 
       role: 'investor',
       verificationStatus: 'pending',
@@ -138,13 +189,6 @@ exports.createInvestor = asyncHandler(async (req, res, next) => {
     success: true,
     data: investor
   });
-});
-
-// @desc    Get all investors
-// @route   GET /api/v1/investors
-// @access  Public
-exports.getInvestors = asyncHandler(async (req, res, next) => {
-  res.status(200).json(res.advancedResults);
 });
 
 // @desc    Get single investor
@@ -170,11 +214,10 @@ exports.getInvestor = asyncHandler(async (req, res, next) => {
 // @route   GET /api/v1/investors/me
 // @access  Private
 exports.getMyInvestorProfile = asyncHandler(async (req, res, next) => {
-  const investor = await Investor.findOne({ userId: req.user.id });
-
-  if (!investor) {
-    return next(new ErrorResponse('Investor profile not found for this user', 404));
-  }
+  // The ensureInvestor middleware should have created or loaded the investor profile
+  // and attached it to req.investor
+  
+  const investor = req.investor;
 
   res.status(200).json({
     success: true,
@@ -223,7 +266,7 @@ exports.deleteInvestor = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`User ${req.user.id} is not authorized to delete this investor profile`, 401));
   }
 
-  await investor.remove();
+  await Investor.findByIdAndDelete(req.params.id);
 
   res.status(200).json({
     success: true,
@@ -291,7 +334,7 @@ exports.addPortfolioCompany = asyncHandler(async (req, res, next) => {
 
   // Make sure user is the investor owner or an admin
   if (investor.userId.toString() !== req.user.id && req.user.role !== 'admin') {
-    return next(new ErrorResponse(`User ${req.user.id} is not authorized to update this investor profile`, 401));
+    return next(new ErrorResponse(`User ${req.user.id} is not authorized to update this investor portfolio`, 401));
   }
 
   investor.portfolio.push(req.body);
@@ -315,7 +358,7 @@ exports.updatePortfolioCompany = asyncHandler(async (req, res, next) => {
 
   // Make sure user is the investor owner or an admin
   if (investor.userId.toString() !== req.user.id && req.user.role !== 'admin') {
-    return next(new ErrorResponse(`User ${req.user.id} is not authorized to update this investor profile`, 401));
+    return next(new ErrorResponse(`User ${req.user.id} is not authorized to update this investor portfolio`, 401));
   }
 
   // Find the portfolio company
@@ -350,7 +393,7 @@ exports.removePortfolioCompany = asyncHandler(async (req, res, next) => {
 
   // Make sure user is the investor owner or an admin
   if (investor.userId.toString() !== req.user.id && req.user.role !== 'admin') {
-    return next(new ErrorResponse(`User ${req.user.id} is not authorized to update this investor profile`, 401));
+    return next(new ErrorResponse(`User ${req.user.id} is not authorized to update this investor portfolio`, 401));
   }
 
   // Remove the portfolio company
