@@ -58,6 +58,10 @@ exports.syncUserProfile = async (req, res, next) => {
         profile.firstName = user.firstName;
         profile.lastName = user.lastName;
         profile.phone = user.phone;
+        profile.bio = user.bio;
+        profile.email = user.email;
+        profile.profilePicture = user.profilePicture;
+
         
         await profile.save();
       }
