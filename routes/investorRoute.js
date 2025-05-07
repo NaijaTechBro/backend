@@ -20,7 +20,7 @@ const {
 
 const { protect, authorize } = require('../middleware/authMiddleware');
 const advancedResults = require('../middleware/advancedResults');
-const { ensureInvestor, syncInvestorProfile } = require('../middleware/investorMiddleware');
+const { ensureInvestor, syncInvestorProfile } = require('../middleware/myinvestorMiddleware');
 
 // Base routes that don't need profile checks
 router.get('/founders', protect, getFounders);
