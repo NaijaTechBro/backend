@@ -1,24 +1,33 @@
 
-// server/models/Deck.js
+// models/Deck.js
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
-const SlideSchema = new Schema({
-  id: { type: String, required: true },
-  title: { type: String, required: true },
-  content: { type: String, default: '' },
-  notes: { type: String, default: '' },
-  order: { type: Number, required: true },
-  template: { type: String, default: '' }
-});
-
-const DeckSchema = new Schema({
-  title: { type: String, required: true },
-  sector: { type: String, default: '' },
-  slides: [SlideSchema],
-  created: { type: Date, default: Date.now },
-  lastModified: { type: Date, default: Date.now },
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true }
-});
+const DeckSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  description: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  isPublic: {
+    type: Boolean,
+    default: false
+  },
+  templateId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Template',
+    default: null
+  }
+}, { timestamps: true });
 
 module.exports = mongoose.model('Deck', DeckSchema);
+

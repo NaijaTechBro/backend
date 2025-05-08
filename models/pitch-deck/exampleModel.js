@@ -1,19 +1,30 @@
-// server/models/Example.js
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
-const ExampleSchema = new Schema({
-  sector: { type: String, required: true },
-  slideType: { type: String, required: true },
-  content: { type: String, required: true },
-  companyName: { type: String, required: true },
-  metrics: {
-    funding: { type: Number },
-    revenue: { type: Number },
-    users: { type: Number },
-    growth: { type: Number }
+// models/Example.js
+const mongoose = require('mongoose');
+
+const ExampleSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true
   },
-  tags: [{ type: String }]
-});
+  description: {
+    type: String,
+    trim: true
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  deckStructure: {
+    type: mongoose.Schema.Types.Mixed,
+    required: true
+  },
+  industry: {
+    type: String,
+    trim: true
+  }
+}, { timestamps: true });
 
 module.exports = mongoose.model('Example', ExampleSchema);
