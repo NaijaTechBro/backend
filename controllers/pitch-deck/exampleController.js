@@ -1,54 +1,176 @@
-// server/controllers/exampleController.js
+// controllers/example.controller.js
 const Example = require('../../models/pitch-deck/exampleModel');
 
-// Get examples for a specific slide type and sector
-const getExamples = async (req, res) => {
+/**
+ * @desc    Get all example decks
+ * @route   GET /api/examples
+ * @access  Private
+ */
+exports.getExamples = async (req, res) => {
   try {
-    const { slideType, sector } = req.query;
+    const examples = await Example.find()
+      .sort({ createdAt: -1 });
     
-    if (!slideType || !sector) {
-      return res.status(400).json({ message: 'Slide type and sector are required' });
-    }
-    
-    const examples = await Example.find({
-      slideType: slideType,
-      sector: sector
-    }).limit(5);
-    
-    res.json({ examples: examples.map(ex => ex.content) });
+    res.json(examples);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Get examples error:', error);
+    res.status(500).json({ message: 'Server error fetching examples' });
   }
 };
 
-// Admin only: Add a new example
-const createExample = async (req, res) => {
+/**
+ * @desc    Get example by ID
+ * @route   GET /api/examples/:id
+ * @access  Private
+ */
+exports.getExampleById = async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized' });
+    const example = await Example.findById(req.params.id);
+    
+    if (!example) {
+      return res.status(404).json({ message: 'Example not found' });
     }
     
-    const { sector, slideType, content, companyName, metrics, tags } = req.body;
+    res.json(example);
+  } catch (error) {
+    console.error('Get example by ID error:', error);
+    res.status(500).json({ message: 'Server error fetching example' });
+  }
+};
+
+/**
+ * @desc    Create a new example deck
+ * @route   POST /api/examples
+ * @access  Private/Admin
+ */
+exports.createExample = async (req, res) => {
+  try {
+    const { title, description, deckStructure, industry } = req.body;
+
+    // Validate required fields
+    if (!title || !deckStructure) {
+      return res.status(400).json({ message: 'Title and deck structure are required' });
+    }
+
+    // Create example
+    const example = await Example.create({
+      title,
+      description: description || '',
+      createdBy: req.user._id,
+      deckStructure,
+      industry: industry || ''
+    });
+
+    res.status(201).json(example);
+  } catch (error) {
+    console.error('Create example error:', error);
+    res.status(500).json({ message: 'Server error creating example' });
+  }
+};
+
+/**
+ * @desc    Update example
+ * @route   PUT /api/examples/:id
+ * @access  Private/Admin
+ */
+exports.updateExample = async (req, res) => {
+  try {
+    const exampleId = req.params.id;
+    const { title, description, deckStructure, industry } = req.body;
+
+    const example = await Example.findById(exampleId);
     
-    const newExample = new Example({
-      sector,
-      slideType,
-      content,
-      companyName,
-      metrics,
-      tags
+    if (!example) {
+      return res.status(404).json({ message: 'Example not found' });
+    }
+
+    // Update fields if provided
+    if (title !== undefined) example.title = title;
+    if (description !== undefined) example.description = description;
+    if (deckStructure !== undefined) example.deckStructure = deckStructure;
+    if (industry !== undefined) example.industry = industry;
+
+    // Save updated example
+    const updatedExample = await example.save();
+    res.json(updatedExample);
+  } catch (error) {
+    console.error('Update example error:', error);
+    res.status(500).json({ message: 'Server error updating example' });
+  }
+};
+
+/**
+ * @desc    Delete example
+ * @route   DELETE /api/examples/:id
+ * @access  Private/Admin
+ */
+exports.deleteExample = async (req, res) => {
+  try {
+    const exampleId = req.params.id;
+    
+    const example = await Example.findById(exampleId);
+    
+    if (!example) {
+      return res.status(404).json({ message: 'Example not found' });
+    }
+
+    // Delete the example
+    await example.remove();
+
+    res.json({ message: 'Example deleted successfully' });
+  } catch (error) {
+    console.error('Delete example error:', error);
+    res.status(500).json({ message: 'Server error deleting example' });
+  }
+};
+
+/**
+ * @desc    Create deck from example
+ * @route   POST /api/examples/:id/create-deck
+ * @access  Private
+ */
+exports.createDeckFromExample = async (req, res) => {
+  try {
+    const exampleId = req.params.id;
+    const { title, description } = req.body;
+    
+    const example = await Example.findById(exampleId);
+    
+    if (!example) {
+      return res.status(404).json({ message: 'Example not found' });
+    }
+    
+    // Create a new deck
+    const Deck = require('../models/Deck');
+    const Slide = require('../models/Slide');
+    
+    const deck = await Deck.create({
+      userId: req.user._id,
+      title: title || example.title,
+      description: description || example.description
     });
     
-    await newExample.save();
-    res.status(201).json(newExample);
+    // Create slides from example structure
+    if (example.deckStructure && example.deckStructure.slides) {
+      for (let i = 0; i < example.deckStructure.slides.length; i++) {
+        const slideTemplate = example.deckStructure.slides[i];
+        
+        await Slide.create({
+          deckId: deck._id,
+          slideType: slideTemplate.type,
+          position: i,
+          content: slideTemplate.content || {},
+          notes: slideTemplate.notes || ''
+        });
+      }
+    }
+    
+    res.status(201).json({
+      message: 'Deck created successfully from example',
+      deck
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Create deck from example error:', error);
+    res.status(500).json({ message: 'Server error creating deck from example' });
   }
-};
-
-module.exports = {
-  getExamples,
-  createExample
 };
