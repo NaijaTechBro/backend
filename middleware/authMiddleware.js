@@ -49,3 +49,93 @@ exports.authorize = (...roles) => {
   };
 };
 
+
+
+
+
+
+/**
+ * Middleware to check ownership of a deck
+ * Used for deck-related operations
+ */
+exports.checkDeckOwnership = async (req, res, next) => {
+  try {
+    const deck = await require('../models/Deck').findById(req.params.id || req.params.deckId);
+    
+    if (!deck) {
+      return res.status(404).json({ message: 'Deck not found' });
+    }
+    
+    // Check if user is owner or admin
+    if (deck.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to access this deck' });
+    }
+    
+    req.deck = deck;
+    next();
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error checking deck ownership' });
+  }
+};
+
+/**
+ * Middleware to check ownership of a slide
+ * Used for slide-related operations
+ */
+exports.checkSlideOwnership = async (req, res, next) => {
+  try {
+    const Slide = require('../models/pitch-deck/slideModel');
+    const Deck = require('../models/pitch-deck/deckModel');
+    
+    const slide = await Slide.findById(req.params.slideId);
+    
+    if (!slide) {
+      return res.status(404).json({ message: 'Slide not found' });
+    }
+    
+    const deck = await Deck.findById(slide.deckId);
+    
+    if (!deck) {
+      return res.status(404).json({ message: 'Associated deck not found' });
+    }
+    
+    // Check if user is owner or admin
+    if (deck.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to access this slide' });
+    }
+    
+    req.slide = slide;
+    req.deck = deck;
+    next();
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error checking slide ownership' });
+  }
+};
+
+/**
+ * Middleware to check ownership of a template
+ * Used for template-related operations
+ */
+exports.checkTemplateOwnership = async (req, res, next) => {
+  try {
+    const template = await require('../models/pitch-deck/templateModel').findById(req.params.id || req.params.templateId);
+    
+    if (!template) {
+      return res.status(404).json({ message: 'Template not found' });
+    }
+    
+    // Check if template is system template, user is creator, or user is admin
+    if (
+      !template.isSystem && 
+      template.creatorId.toString() !== req.user._id.toString() && 
+      req.user.role !== 'admin'
+    ) {
+      return res.status(403).json({ message: 'Not authorized to access this template' });
+    }
+    
+    req.template = template;
+    next();
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error checking template ownership' });
+  }
+};
