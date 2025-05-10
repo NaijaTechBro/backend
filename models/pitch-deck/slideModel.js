@@ -1,4 +1,4 @@
-// models/Slide.js
+// models/pitch-deck/slideModel.js
 const mongoose = require('mongoose');
 
 const SlideSchema = new mongoose.Schema({
@@ -9,7 +9,12 @@ const SlideSchema = new mongoose.Schema({
   },
   slideType: {
     type: String,
-    required: true
+    required: true,
+    enum: [
+      'intro', 'problem', 'solution', 'market', 'competition', 
+      'business_model', 'traction', 'team', 'financials', 
+      'call_to_action', 'custom'
+    ]
   },
   position: {
     type: Number,
@@ -25,6 +30,21 @@ const SlideSchema = new mongoose.Schema({
   notes: {
     type: String,
     default: ''
+  },
+  aiSuggestions: [{
+    suggestion: String,
+    applied: {
+      type: Boolean,
+      default: false
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  optimizedAt: {
+    type: Date,
+    default: null
   }
 }, { timestamps: true });
 

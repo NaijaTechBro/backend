@@ -132,12 +132,12 @@ exports.processIndustryPrompt = (slideType, params) => {
     }
   
     // Build the prompt
-    return `${slideInfo.title} for a ${industry} company targeting ${target}.
+    return `${slideInfo.title} for a ${industry} company targeting ${target || "businesses/customers"}.
   
   Key points to include:
-  ${keyPoints}
+  ${keyPoints || "Focus on clarity, impact, and relevance to the industry"}
   
-  Tone: ${tone}
+  Tone: ${tone || "professional"}
   
   Please provide content in the following JSON format:
   ${slideInfo.format}
@@ -145,7 +145,7 @@ exports.processIndustryPrompt = (slideType, params) => {
   Make sure the content is:
   1. Concise and impactful - avoid fluff
   2. Specific to the ${industry} industry
-  3. Relevant to the ${target} audience
+  3. Relevant to the ${target || "target"} audience
   4. Actionable and clear
   5. Suitable for a presentation slide (not too text-heavy)${existingContentText}`;
   };
@@ -177,6 +177,30 @@ exports.processIndustryPrompt = (slideType, params) => {
    * @returns {string} - Formatted prompt for the AI
    */
   exports.processImprovementSuggestions = (deckStructure) => {
+    const isSingleSlide = deckStructure.forSingleSlide || false;
+    
+    if (isSingleSlide) {
+      const slide = deckStructure.slides[0];
+      return `Please analyze this individual slide and provide specific, actionable improvements:
+      
+      Slide Type: ${slide.type}
+      Position in Deck: ${slide.position || "N/A"}
+      
+      Content:
+      ${JSON.stringify(slide.content, null, 2)}
+      
+      ${slide.notes ? `Notes: ${slide.notes}` : ""}
+      
+      Please provide 5-7 specific, actionable improvements for this slide focusing on:
+      1. Content clarity and impact
+      2. Visual presentation
+      3. Persuasiveness and messaging
+      4. Alignment with likely pitch objectives
+      5. Text reduction without losing meaning
+      
+      Format your suggestions as a list of clear, actionable recommendations that can be directly implemented.`;
+    }
+    
     return `Please analyze this pitch deck and provide specific, actionable improvements:
   
   Deck Title: ${deckStructure.title}
@@ -196,13 +220,7 @@ exports.processIndustryPrompt = (slideType, params) => {
   4. Suggestions for better visual elements
   5. Ways to enhance persuasiveness for investors/stakeholders
   
-  Format your response as:
-  - Overall Assessment: [brief assessment]
-  - Narrative Flow: [feedback on story arc]
-  - Content Gaps: [identify missing elements]
-  - Slide-Specific Improvements: [list by position/type]
-  - Visual Enhancement: [suggestions for visuals]
-  - Next Steps: [3-5 actionable recommendations]`;
+  Format your response as a numbered list of 10-15 specific, actionable suggestions that can be implemented directly. Each suggestion should be a single sentence or short paragraph.`;
   };
   
   /**
@@ -258,3 +276,94 @@ exports.processIndustryPrompt = (slideType, params) => {
   4. Specific improvement recommendations
   5. Examples of better wording/structure where applicable`;
   };
+
+/**
+ * Generate a prompt for applying a specific improvement suggestion
+ * @param {Object} params - Parameters for the suggestion application
+ * @param {string} params.suggestion - The improvement suggestion to apply
+ * @param {Array} params.slides - Array of slides to apply the suggestion to
+ * @param {boolean} params.forSingleSlide - Whether applying to a single slide or multiple
+ * @returns {string} - Formatted prompt for the AI
+ */
+exports.processSuggestionApplication = (params) => {
+  const { suggestion, slides, forSingleSlide } = params;
+  
+  if (forSingleSlide) {
+    const slide = slides[0];
+    return `Please apply the following improvement suggestion to this slide:
+    
+    Suggestion: "${suggestion}"
+    
+    Current Slide Content (${slide.type} slide):
+    ${JSON.stringify(slide.content, null, 2)}
+    
+    Please modify the slide content to implement this suggestion. Return the complete updated content in the same JSON format, with all fields preserved. Be precise and focused on implementing exactly what the suggestion recommends without making unrelated changes.`;
+  }
+  
+  return `Please apply the following improvement suggestion across multiple slides in a deck:
+  
+  Suggestion: "${suggestion}"
+  
+  Current Slides:
+  ${JSON.stringify(slides.map(slide => ({
+    id: slide.id,
+    type: slide.type,
+    position: slide.position,
+    content: slide.content
+  })), null, 2)}
+  
+  Please modify the slides that are most relevant to this suggestion. Return a JSON object with slide IDs as keys and their updated content as values, like this:
+  {
+    "slide-id-1": { /* updated content for this slide */ },
+    "slide-id-2": { /* updated content for this slide */ }
+  }
+  
+  Only include slides that you've actually modified. Be precise and focused on implementing exactly what the suggestion recommends.`;
+};
+
+/**
+ * Generate a prompt for creating a complete deck structure
+ * @param {Object} params - Parameters for deck generation
+ * @param {string} params.topic - Main topic or theme of the deck
+ * @param {string} params.industry - Industry sector
+ * @param {number} params.slideCount - Number of slides to generate
+ * @returns {string} - Formatted prompt for the AI
+ */
+exports.processDeckStructureGeneration = (params) => {
+  const { topic, industry, slideCount } = params;
+  
+  return `Please create a comprehensive pitch deck structure for a ${industry} company presentation on "${topic}".
+  
+  The deck should include ${slideCount} slides, with appropriate slide types and content for each. Focus on creating a compelling narrative flow that would be effective for investors or stakeholders in the ${industry} industry.
+  
+  For each slide, provide:
+  1. Slide type (e.g., intro, problem, solution, market, etc.)
+  2. A compelling title
+  3. Brief description of key content points (2-3 bullet points)
+  4. A suggestion for visual elements
+  
+  Return the structure in the following JSON format:
+  {
+    "title": "Overall deck title",
+    "description": "Brief description of the deck's purpose",
+    "slides": [
+      {
+        "position": 1,
+        "type": "intro",
+        "title": "Slide title",
+        "keyPoints": ["Point 1", "Point 2", "Point 3"],
+        "visualSuggestion": "Suggested visual element"
+      },
+      {
+        "position": 2,
+        "type": "problem",
+        "title": "Slide title",
+        "keyPoints": ["Point 1", "Point 2", "Point 3"],
+        "visualSuggestion": "Suggested visual element"
+      }
+      // And so on for all ${slideCount} slides
+    ]
+  }
+  
+  Ensure the slides follow a logical progression that tells a compelling story about the ${topic} in the ${industry} industry.`;
+};

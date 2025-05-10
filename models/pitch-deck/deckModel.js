@@ -1,5 +1,4 @@
-
-// models/Deck.js
+// models/pitch-deck/deckModel.js
 const mongoose = require('mongoose');
 
 const DeckSchema = new mongoose.Schema({
@@ -18,6 +17,16 @@ const DeckSchema = new mongoose.Schema({
     default: '',
     trim: true
   },
+  industry: {
+    type: String,
+    trim: true,
+    default: 'Technology'
+  },
+  target: {
+    type: String,
+    trim: true,
+    default: 'Investors'
+  },
   isPublic: {
     type: Boolean,
     default: false
@@ -26,8 +35,22 @@ const DeckSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Template',
     default: null
+  },
+  aiSuggestions: [{
+    suggestion: String,
+    applied: {
+      type: Boolean,
+      default: false
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  lastAnalyzed: {
+    type: Date,
+    default: null
   }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Deck', DeckSchema);
-

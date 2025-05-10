@@ -4,6 +4,204 @@ const Deck = require('../../models/pitch-deck/deckModel');
 const cloudinary = require('../../utils/cloudinaryDocuments');
 const fs = require('fs');
 
+
+
+/**
+ * @desc    Get a slide by ID
+ * @route   GET /api/slides/:id
+ * @access  Private
+ */
+exports.getSlideById = async (req, res) => {
+  try {
+    const slideId = req.params.id;
+
+    // Get slide and verify ownership via deck association
+    const slide = await Slide.findById(slideId);
+    
+    if (!slide) {
+      return res.status(404).json({ message: 'Slide not found' });
+    }
+
+    // Verify ownership through deck
+    const deck = await Deck.findOne({ 
+      _id: slide.deckId,
+      userId: req.user._id
+    });
+
+    if (!deck) {
+      return res.status(403).json({ message: 'Not authorized to access this slide' });
+    }
+
+    res.json({ slide });
+  } catch (error) {
+    console.error('Get slide error:', error);
+    res.status(500).json({ message: 'Server error fetching slide' });
+  }
+};
+
+/**
+ * @desc    Update a slide
+ * @route   PUT /api/slides/:id
+ * @access  Private
+ */
+exports.updateSlide = async (req, res) => {
+  try {
+    const slideId = req.params.id;
+    const { content, notes } = req.body;
+
+    // Find slide
+    const slide = await Slide.findById(slideId);
+    
+    if (!slide) {
+      return res.status(404).json({ message: 'Slide not found' });
+    }
+
+    // Verify ownership through deck
+    const deck = await Deck.findOne({ 
+      _id: slide.deckId,
+      userId: req.user._id
+    });
+
+    if (!deck) {
+      return res.status(403).json({ message: 'Not authorized to update this slide' });
+    }
+
+    // Update fields if provided
+    if (content !== undefined) slide.content = content;
+    if (notes !== undefined) slide.notes = notes;
+
+    // Save updated slide
+    const updatedSlide = await slide.save();
+    res.json({ slide: updatedSlide });
+  } catch (error) {
+    console.error('Update slide error:', error);
+    res.status(500).json({ message: 'Server error updating slide' });
+  }
+};
+
+/**
+ * @desc    Middleware to check slide ownership
+ * @access  Private
+ */
+exports.checkSlideOwnership = async (req, res, next) => {
+  try {
+    const slideId = req.params.id;
+    
+    // Find slide
+    const slide = await Slide.findById(slideId);
+    
+    if (!slide) {
+      return res.status(404).json({ message: 'Slide not found' });
+    }
+
+    // Verify ownership through deck
+    const deck = await Deck.findOne({ 
+      _id: slide.deckId,
+      userId: req.user._id
+    });
+
+    if (!deck) {
+      return res.status(403).json({ message: 'Not authorized to access this slide' });
+    }
+
+    // Attach slide to request
+    req.slide = slide;
+    next();
+  } catch (error) {
+    console.error('Check slide ownership error:', error);
+    res.status(500).json({ message: 'Server error checking slide ownership' });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @desc    Add a new slide to a deck
+ * @route   POST /api/decks/:deckId/slides
+ * @access  Private
+ */
+exports.addSlide = async (req, res) => {
+  try {
+    const { slideType, position } = req.body;
+    const deckId = req.params.deckId;
+
+    // Validate required fields
+    if (!slideType) {
+      return res.status(400).json({ message: 'Slide type is required' });
+    }
+
+    // Validate deck ownership (assuming middleware sets req.deck)
+    if (!req.deck) {
+      // If no middleware, check deck ownership manually
+      const deck = await Deck.findOne({ _id: deckId, userId: req.user._id });
+      if (!deck) {
+        return res.status(404).json({ message: 'Deck not found or unauthorized' });
+      }
+    }
+
+    // If position is not specified, add to the end
+    let slidePosition = position;
+    if (slidePosition === undefined) {
+      // Count existing slides to determine last position
+      const slidesCount = await Slide.countDocuments({ deckId });
+      slidePosition = slidesCount;
+    } else {
+      // If position is specified, shift existing slides
+      await Slide.updateMany(
+        { deckId, position: { $gte: slidePosition } },
+        { $inc: { position: 1 } }
+      );
+    }
+
+    // Create default content based on slide type
+    let defaultContent = {};
+    switch (slideType) {
+      case 'title':
+        defaultContent = {
+          title: 'Title Slide',
+          subtitle: 'Click to edit subtitle'
+        };
+        break;
+      case 'content':
+        defaultContent = {
+          title: 'Content Slide',
+          bullets: ['Click to edit bullet point']
+        };
+        break;
+      // Add more default content for other slide types as needed
+    }
+
+    // Create new slide
+    const slide = await Slide.create({
+      deckId,
+      slideType,
+      position: slidePosition,
+      content: defaultContent,
+      notes: ''
+    });
+
+    res.status(201).json({ slide });
+  } catch (error) {
+    console.error('Add slide error:', error);
+    res.status(500).json({ message: 'Server error adding slide' });
+  }
+};
+
+
+
 /**
  * @desc    Create a new slide
  * @route   POST /api/decks/:deckId/slides
@@ -60,39 +258,34 @@ exports.createSlide = async (req, res) => {
 };
 
 /**
- * @desc    Update a slide
- * @route   PUT /api/slides/:slideId
- * @access  Private
- */
-exports.updateSlide = async (req, res) => {
-  try {
-    const { content, slideType, notes } = req.body;
-    const slide = req.slide; // Attached by middleware
-
-    // Update fields if provided
-    if (content !== undefined) slide.content = content;
-    if (slideType !== undefined) slide.slideType = slideType;
-    if (notes !== undefined) slide.notes = notes;
-
-    // Save updated slide
-    const updatedSlide = await slide.save();
-    res.json(updatedSlide);
-  } catch (error) {
-    console.error('Update slide error:', error);
-    res.status(500).json({ message: 'Server error updating slide' });
-  }
-};
-
-/**
  * @desc    Delete a slide
  * @route   DELETE /api/slides/:slideId
  * @access  Private
  */
 exports.deleteSlide = async (req, res) => {
   try {
-    const slide = req.slide; // Attached by middleware
+    const slideId = req.params.id;
+
+    // Find slide
+    const slide = await Slide.findById(slideId);
+    
+    if (!slide) {
+      return res.status(404).json({ message: 'Slide not found' });
+    }
+
+    // Verify ownership through deck
+    const deck = await Deck.findOne({ 
+      _id: slide.deckId,
+      userId: req.user._id
+    });
+
+    if (!deck) {
+      return res.status(403).json({ message: 'Not authorized to delete this slide' });
+    }
+
     const deckId = slide.deckId;
     const position = slide.position;
+
 
     // Delete slide media if any
     if (slide.mediaUrls && slide.mediaUrls.length > 0) {
