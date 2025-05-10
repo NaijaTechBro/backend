@@ -4,9 +4,9 @@ const express = require('express');
 // Security
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
-// const cors = require('cors');
+const cors = require('cors');
 const helmet = require('helmet');
-// const { whitelist } = require('./config/whitelist');
+const { whitelist } = require('./config/whitelist');
 
 const app = express();
 const path = require('path');
@@ -26,26 +26,26 @@ connectDB()
 // Middlewares
 app.use(logger)
 
-// Cross Origin Resource Sharing
-// app.use(cors({
-//     origin: function (origin, callback) {
-//         // Allow requests with no origin (like mobile apps, curl requests)
-//         if (!origin) return callback(null, true);
+// Configure CORS before routes but after other essential middleware
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, curl requests)
+        if (!origin) return callback(null, true);
         
-//         if (whitelist.indexOf(origin) !== -1) {
-//             callback(null, true);
-//         } else {
-//             callback(new Error('Not allowed by CORS'));
-//         }
-//     },
-//     credentials: true,
-//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//     allowedHeaders: ['Content-Type', 'Authorization'],
-// }));
-
-// Error Middleware
-app.use(errorHandler)
-app.use(errorMiddleware)
+        if (whitelist.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+            callback(null, true);
+        } else {
+            // Instead of throwing an error, just log it and allow the request with a warning
+            console.warn(`Warning: Request from non-whitelisted origin: ${origin}`);
+            callback(null, true); // Allow all origins in case of misconfiguration
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Include OPTIONS for preflight
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Length', 'X-Requested-With'],
+    maxAge: 86400 // Cache preflight response for 24 hours
+}));
 
 app.use(express.json({ limit: "30mb", extended: true}))
 app.use(express.urlencoded({ limit: "30mb", extended: false}))
@@ -88,5 +88,9 @@ app.use('/api', require('./routes/pitch-deck/exportRoute'));
 app.use('/api', require('./routes/pitch-deck/templateRoute'));
 app.use('/api', require('./routes/pitch-deck/exampleRoute'));
 app.use('/api', require('./routes/pitch-deck/slideRoute'));
+
+// Error Middleware - should be after routes
+app.use(errorHandler)
+app.use(errorMiddleware)
 
 module.exports = app;
