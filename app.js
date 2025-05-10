@@ -4,9 +4,9 @@ const express = require('express');
 // Security
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
-const cors = require('cors');
+// const cors = require('cors');
 const helmet = require('helmet');
-const { whitelist } = require('./config/whitelist');
+// const { whitelist } = require('./config/whitelist');
 
 const app = express();
 const path = require('path');
@@ -27,21 +27,21 @@ connectDB()
 app.use(logger)
 
 // Cross Origin Resource Sharing
-app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps, curl requests)
-        if (!origin) return callback(null, true);
+// app.use(cors({
+//     origin: function (origin, callback) {
+//         // Allow requests with no origin (like mobile apps, curl requests)
+//         if (!origin) return callback(null, true);
         
-        if (whitelist.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+//         if (whitelist.indexOf(origin) !== -1) {
+//             callback(null, true);
+//         } else {
+//             callback(new Error('Not allowed by CORS'));
+//         }
+//     },
+//     credentials: true,
+//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//     allowedHeaders: ['Content-Type', 'Authorization'],
+// }));
 
 // Error Middleware
 app.use(errorHandler)
